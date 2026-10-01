@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ocean Way Tours - Sri Lanka Hotel Rate Sheet & Costing Master</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #f1f5f9;
+    }
+
+    .table-row:hover {
+      background-color: #f8fafc;
+    }
+
+    .badge-5star {
+      background-color: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    .badge-4star {
+      background-color: #e0e7ff;
+      color: #3730a3;
+      border: 1px solid #c7d2fe;
+    }
+
+    .badge-3star {
+      background-color: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .tab-active {
+      border-bottom: 3px solid #2563eb;
+      color: #1d4ed8;
+      font-weight: 600;
+    }
+
+    .tab-inactive {
+      color: #64748b;
+    }
+
+    .tab-inactive:hover {
+      color: #1e293b;
+    }
+  </style>
+</head>
+
+<body class="p-6 md:p-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- TOP HEADER -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+      <div>
+        <div class="flex items-center gap-3">
+          <div class="bg-blue-600 text-white p-3 rounded-xl shadow">
+            <i class="fa-solid fa-hotel text-2xl"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900">Ocean Way Tours - Hotel Rate Sheet & Costing Master</h1>
+            <p class="text-sm text-slate-500">Curated Sri Lanka Destinations • Category-by-Category • Automated Rate Sheet Ingestion</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3">
+        <a href="/api/costing-sheet/download" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 shadow-sm transition">
+          <i class="fa-solid fa-file-excel"></i> Download Master Excel (.xlsx)
+        </a>
+
+        <button onclick="connectWhatsApp()" id="btn-wa-connect" class="bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 border border-green-200 transition shadow-sm">
+          <i class="fa-brands fa-whatsapp text-lg text-green-600"></i> Link WhatsApp (For Instant Delivery)
+        </button>
+
+        <button onclick="openRateSheetFolder()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 border border-slate-300 transition shadow-sm">
+          <i class="fa-solid fa-folder-open text-amber-500"></i> Rate Folders
+        </button>
+
+        <button onclick="syncInbox()" id="btn-sync-inbox" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 shadow-sm transition">
+          <i class="fa-solid fa-inbox"></i> Sync Inbox
+        </button>
+      </div>
+    </div>
+
+    <!-- STATS OVERVIEW CARDS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Big Sheet Pricing Rows</p>
+          <h3 class="text-2xl font-bold text-emerald-600 mt-1" id="stat-bigsheet-count">0</h3>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-table"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Hotels Tracked</p>
+          <h3 class="text-2xl font-bold text-slate-800 mt-1" id="stat-total">0</h3>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-building"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Rate Sheets In Hand</p>
+          <h3 class="text-2xl font-bold text-blue-600 mt-1" id="stat-received">0</h3>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-file-invoice-dollar"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Requests Dispatched</p>
+          <h3 class="text-2xl font-bold text-indigo-600 mt-1" id="stat-contacted">0</h3>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-paper-plane"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROL PANEL: TARGETED DESTINATION & CATEGORY SCANNER -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800">Targeted Destination & Hotel Category Scanner</h2>
+          <p class="text-xs text-slate-500">Search specific categories in specific curated destinations (e.g., 4-star in Mirissa, 5-star in Kandy)</p>
+        </div>
+        <div id="scan-status-indicator" class="hidden flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-semibold animate-pulse">
+          <i class="fa-solid fa-spinner fa-spin"></i> <span id="scan-status-text">Scanning in progress...</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Curated Destination</label>
+          <select id="scan-region-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="Mirissa">Mirissa (South Coast)</option>
+            <option value="Weligama">Weligama (South Coast)</option>
+            <option value="Galle">Galle (South Coast)</option>
+            <option value="Bentota">Bentota (South Coast)</option>
+            <option value="Hikkaduwa">Hikkaduwa (South Coast)</option>
+            <option value="Tangalle">Tangalle (South Coast)</option>
+            <option value="Kandy">Kandy (Central Highlands)</option>
+            <option value="Nuwara Eliya">Nuwara Eliya (Central Highlands)</option>
+            <option value="Ella">Ella (Central Highlands)</option>
+            <option value="Sigiriya">Sigiriya (Cultural Triangle)</option>
+            <option value="Dambulla">Dambulla (Cultural Triangle)</option>
+            <option value="Yala">Yala / Tissamaharama (Safari)</option>
+            <option value="Udawalawe">Udawalawe (Safari)</option>
+            <option value="Trincomalee">Trincomalee / Nilaveli (East Coast)</option>
+            <option value="Pasikuda">Pasikuda (East Coast)</option>
+            <option value="Arugam Bay">Arugam Bay (East Coast)</option>
+            <option value="Colombo">Colombo (Commercial Hub)</option>
+            <option value="Negombo">Negombo (Airport / Transit)</option>
+            <option value="">All Sri Lanka</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Target Star Category</label>
+          <select id="scan-category-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="4-star">⭐⭐⭐⭐ 4-Star Hotels</option>
+            <option value="5-star">⭐⭐⭐⭐⭐ 5-Star Hotels</option>
+            <option value="3-star">⭐⭐⭐ 3-Star Hotels</option>
+          </select>
+        </div>
+
+        <div class="flex items-center pt-5">
+          <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+            <input type="checkbox" id="scan-auto-email" class="w-4 h-4 rounded text-blue-600 border-slate-300" checked>
+            <span>Auto-send B2B inquiry from b2b@oceanwaytours.com</span>
+          </label>
+        </div>
+
+        <div class="flex items-end">
+          <button onclick="startCategoryScan()" id="btn-start-scan" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-xl text-sm shadow flex items-center justify-center gap-2 transition">
+            <i class="fa-solid fa-magnifying-glass"></i> Search & Request Rates
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN VIEWS CONTAINER -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      
+      <!-- TOP NAVIGATION TABS -->
+      <div class="flex flex-wrap border-b border-slate-200 px-6 pt-4 gap-6 bg-slate-50/50">
+        <button id="nav-bigsheet" onclick="switchMainView('bigsheet')" class="pb-3 text-sm tab-active flex items-center gap-2 font-bold text-emerald-700">
+          <i class="fa-solid fa-table-cells text-emerald-600 text-base"></i> 📊 Master Costing Big Sheet (<span id="count-bigsheet">0</span> Rates)
+        </button>
+        <button id="nav-hotels" onclick="switchMainView('hotels')" class="pb-3 text-sm tab-inactive flex items-center gap-2 font-medium">
+          <i class="fa-solid fa-hotel text-slate-500"></i> Hotel Directory & Outreach (<span id="count-hotels-total">0</span>)
+        </button>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════ -->
+      <!-- VIEW 1: MASTER COSTING BIG SHEET                         -->
+      <!-- ══════════════════════════════════════════════════════════ -->
+      <div id="view-bigsheet" class="p-6 space-y-4">
+        
+        <!-- BIG SHEET FILTER TOOLBAR -->
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <div>
+              <label class="text-xs font-semibold text-slate-500 uppercase block mb-1">Filter Destination</label>
+              <select id="bigsheet-filter-dest" onchange="renderBigSheetTable()" class="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-800">
+                <option value="all">All Destinations</option>
+                <option value="Mirissa">Mirissa</option>
+                <option value="Weligama">Weligama</option>
+                <option value="Galle">Galle</option>
+                <option value="Bentota">Bentota</option>
+                <option value="Kandy">Kandy</option>
+                <option value="Nuwara Eliya">Nuwara Eliya</option>
+                <option value="Ella">Ella</option>
+                <option value="Sigiriya">Sigiriya</option>
+                <option value="Dambulla">Dambulla</option>
+                <option value="Yala">Yala</option>
+                <option value="Colombo">Colombo</option>
+                <option value="Negombo">Negombo</option>
+                <option value="Trincomalee">Trincomalee</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-xs font-semibold text-slate-500 uppercase block mb-1">Filter Star Category</label>
+              <select id="bigsheet-filter-cat" onchange="renderBigSheetTable()" class="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-800">
+                <option value="all">All Star Categories</option>
+                <option value="5-star">5-Star Luxury</option>
+                <option value="4-star">4-Star Premium</option>
+                <option value="3-star">3-Star Midscale</option>
+              </select>
+            </div>
+
+            <div class="w-full md:w-64">
+              <label class="text-xs font-semibold text-slate-500 uppercase block mb-1">Search Hotel / Room</label>
+              <input type="text" id="bigsheet-search" oninput="renderBigSheetTable()" placeholder="e.g. Deluxe, Suite, Cinnamon..." class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+            <a href="/api/costing-sheet/download" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-2 shadow-sm transition">
+              <i class="fa-solid fa-file-arrow-down"></i> Export to Excel (.xlsx)
+            </a>
+          </div>
+        </div>
+
+        <!-- BIG SHEET DATA TABLE -->
+        <div class="overflow-x-auto border border-slate-200 rounded-xl shadow-sm">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-100 text-slate-700 uppercase font-semibold border-b border-slate-200">
+                <th class="p-3">Destination</th>
+                <th class="p-3">Star</th>
+                <th class="p-3">Hotel Name</th>
+                <th class="p-3">Room Category</th>
+                <th class="p-3">Season / Dates</th>
+                <th class="p-3 text-center">Cur</th>
+                <th class="p-3 text-right">RO</th>
+                <th class="p-3 text-right font-bold text-blue-700">BB (Bed & Breakfast)</th>
+                <th class="p-3 text-right font-bold text-indigo-700">HB (Half Board)</th>
+                <th class="p-3 text-right font-bold text-emerald-700">FB (Full Board)</th>
+                <th class="p-3">Policies / Notes</th>
+              </tr>
+            </thead>
+            <tbody id="bigsheet-tbody" class="divide-y divide-slate-100 text-slate-700">
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div id="bigsheet-empty-state" class="hidden p-12 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+          <div class="w-14 h-14 rounded-full bg-emerald-50 text-emerald-500 mx-auto flex items-center justify-center text-2xl mb-3">
+            <i class="fa-solid fa-file-invoice-dollar"></i>
+          </div>
+          <h4 class="text-slate-800 font-bold">No rate sheet pricing lines parsed yet</h4>
+          <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+            When hotels reply to <span class="font-mono text-blue-600">b2b@oceanwaytours.com</span> with rate sheet attachments (PDF or Excel),
+            the AI analyzer automatically parses room categories, seasons, and BB/HB/FB rates directly into this Big Sheet!
+          </p>
+        </div>
+
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════ -->
+      <!-- VIEW 2: HOTEL DIRECTORY & OUTREACH STATUS                -->
+      <!-- ══════════════════════════════════════════════════════════ -->
+      <div id="view-hotels" class="hidden p-6 space-y-4">
+        
+        <!-- SUB-TABS: HOTEL CATEGORIES -->
+        <div class="flex flex-wrap border-b border-slate-200 gap-4 pb-2">
+          <button id="subtab-all" onclick="setHotelCategoryFilter('all')" class="text-xs font-semibold text-blue-600 border-b-2 border-blue-600 pb-1">All Hotels</button>
+          <button id="subtab-5star" onclick="setHotelCategoryFilter('5-star')" class="text-xs font-semibold text-slate-500 hover:text-slate-800 pb-1">5-Star Luxury</button>
+          <button id="subtab-4star" onclick="setHotelCategoryFilter('4-star')" class="text-xs font-semibold text-slate-500 hover:text-slate-800 pb-1">4-Star Premium</button>
+          <button id="subtab-3star" onclick="setHotelCategoryFilter('3-star')" class="text-xs font-semibold text-slate-500 hover:text-slate-800 pb-1">3-Star Midscale</button>
+          <button id="subtab-received" onclick="setHotelCategoryFilter('received')" class="text-xs font-semibold text-slate-500 hover:text-slate-800 pb-1">Rate Sheets Received</button>
+        </div>
+
+        <!-- SEARCH BAR -->
+        <div class="flex justify-between items-center gap-4">
+          <div class="relative w-full md:w-80">
+            <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+            <input type="text" id="hotel-search" oninput="renderHotelTable()" placeholder="Search hotel name, destination..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-4 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <button onclick="batchSendInquiries()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-2 transition">
+            <i class="fa-solid fa-paper-plane"></i> Send Requests to All Uncontacted
+          </button>
+        </div>
+
+        <!-- HOTEL TABLE -->
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                <th class="p-3">Category</th>
+                <th class="p-3">Hotel Name</th>
+                <th class="p-3">Destination</th>
+                <th class="p-3">Contact Email</th>
+                <th class="p-3">Status</th>
+                <th class="p-3">Rate Sheets</th>
+                <th class="p-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="hotel-tbody" class="divide-y divide-slate-100 text-slate-700">
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let allHotels = [];
+    let bigSheetRows = [];
+    let currentMainView = 'bigsheet';
+    let hotelCategoryFilter = 'all';
+
+    async function loadData() {
+      await Promise.all([loadHotels(), loadBigSheet()]);
+    }
+
+    async function loadHotels() {
+      try {
+        const res = await fetch('/api/hotels');
+        allHotels = await res.json();
+        updateHotelStats();
+        renderHotelTable();
+      } catch (err) {
+        console.error('Failed to load hotels:', err);
+      }
+    }
+
+    async function loadBigSheet() {
+      try {
+        const res = await fetch('/api/costing-sheet');
+        bigSheetRows = await res.json();
+        document.getElementById('stat-bigsheet-count').innerText = bigSheetRows.length;
+        document.getElementById('count-bigsheet').innerText = bigSheetRows.length;
+        renderBigSheetTable();
+      } catch (err) {
+        console.error('Failed to load big sheet:', err);
+      }
+    }
+
+    function switchMainView(view) {
+      currentMainView = view;
+      document.getElementById('view-bigsheet').classList.toggle('hidden', view !== 'bigsheet');
+      document.getElementById('view-hotels').classList.toggle('hidden', view !== 'hotels');
+
+      const btnBig = document.getElementById('nav-bigsheet');
+      const btnHotels = document.getElementById('nav-hotels');
+
+      if (view === 'bigsheet') {
+        btnBig.className = 'pb-3 text-sm tab-active flex items-center gap-2 font-bold text-emerald-700';
+        btnHotels.className = 'pb-3 text-sm tab-inactive flex items-center gap-2 font-medium';
+        renderBigSheetTable();
+      } else {
+        btnHotels.className = 'pb-3 text-sm tab-active flex items-center gap-2 font-bold text-blue-700';
+        btnBig.className = 'pb-3 text-sm tab-inactive flex items-center gap-2 font-medium';
+        renderHotelTable();
+      }
+    }
+
+    function updateHotelStats() {
+      const total = allHotels.length;
+      const contacted = allHotels.filter(h => h.status === 'EMAIL_SENT' || h.status === 'RATE_SHEET_RECEIVED').length;
+      const received = allHotels.filter(h => h.status === 'RATE_SHEET_RECEIVED').length;
+
+      document.getElementById('stat-total').innerText = total;
+      document.getElementById('count-hotels-total').innerText = total;
+      document.getElementById('stat-contacted').innerText = contacted;
+      document.getElementById('stat-received').innerText = received;
+    }
+
+    function renderBigSheetTable() {
+      const tbody = document.getElementById('bigsheet-tbody');
+      tbody.innerHTML = '';
+
+      const destFilter = document.getElementById('bigsheet-filter-dest').value;
+      const catFilter = document.getElementById('bigsheet-filter-cat').value;
+      const search = (document.getElementById('bigsheet-search').value || '').toLowerCase();
+
+      let filtered = bigSheetRows.filter(r => {
+        if (destFilter !== 'all' && (r.destination || '').toLowerCase() !== destFilter.toLowerCase()) return false;
+        if (catFilter !== 'all' && !(r.starCategory || '').toLowerCase().includes(catFilter.toLowerCase())) return false;
+        if (search) {
+          const matchHotel = (r.hotelName || '').toLowerCase().includes(search);
+          const matchRoom = (r.roomType || '').toLowerCase().includes(search);
+          const matchDest = (r.destination || '').toLowerCase().includes(search);
+          if (!matchHotel && !matchRoom && !matchDest) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        document.getElementById('bigsheet-empty-state').classList.remove('hidden');
+        return;
+      } else {
+        document.getElementById('bigsheet-empty-state').classList.add('hidden');
+      }
+
+      filtered.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.className = 'table-row border-b border-slate-100 transition';
+
+        let badgeHtml = `<span class="px-2 py-0.5 rounded text-[11px] font-semibold badge-4star">${r.starCategory || '4-Star'}</span>`;
+        if ((r.starCategory || '').includes('5')) badgeHtml = `<span class="px-2 py-0.5 rounded text-[11px] font-semibold badge-5star">5-Star ⭐⭐⭐⭐⭐</span>`;
+        if ((r.starCategory || '').includes('3')) badgeHtml = `<span class="px-2 py-0.5 rounded text-[11px] font-semibold badge-3star">3-Star ⭐⭐⭐</span>`;
+
+        tr.innerHTML = `
+          <td class="p-3 font-semibold text-slate-800 whitespace-nowrap">
+            <i class="fa-solid fa-location-dot text-rose-500 mr-1 text-[10px]"></i> ${r.destination || 'Sri Lanka'}
+          </td>
+          <td class="p-3 whitespace-nowrap">${badgeHtml}</td>
+          <td class="p-3 font-bold text-slate-900">${r.hotelName}</td>
+          <td class="p-3 font-medium text-slate-800">${r.roomType}</td>
+          <td class="p-3 text-slate-500 text-[11px]">${r.season} (${r.validity})</td>
+          <td class="p-3 text-center font-mono font-bold text-slate-600">${r.currency || 'USD'}</td>
+          <td class="p-3 text-right font-mono text-slate-500">${r.roRate ? '$' + r.roRate : '-'}</td>
+          <td class="p-3 text-right font-mono font-bold text-blue-700 bg-blue-50/30">${r.bbRate ? '$' + r.bbRate : '-'}</td>
+          <td class="p-3 text-right font-mono font-bold text-indigo-700 bg-indigo-50/30">${r.hbRate ? '$' + r.hbRate : '-'}</td>
+          <td class="p-3 text-right font-mono font-bold text-emerald-700 bg-emerald-50/30">${r.fbRate ? '$' + r.fbRate : '-'}</td>
+          <td class="p-3 text-[11px] text-slate-500 max-w-xs truncate" title="${r.notes || r.childPolicy || ''}">
+            ${r.notes || r.childPolicy || '-'}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function setHotelCategoryFilter(cat) {
+      hotelCategoryFilter = cat;
+      const tabs = ['all', '5star', '4star', '3star', 'received'];
+      tabs.forEach(t => {
+        const el = document.getElementById(`subtab-${t}`);
+        if (el) {
+          if ((t === 'all' && cat === 'all') ||
+              (t === '5star' && cat === '5-star') ||
+              (t === '4star' && cat === '4-star') ||
+              (t === '3star' && cat === '3-star') ||
+              (t === 'received' && cat === 'received')) {
+            el.className = 'text-xs font-semibold text-blue-600 border-b-2 border-blue-600 pb-1';
+          } else {
+            el.className = 'text-xs font-semibold text-slate-500 hover:text-slate-800 pb-1';
+          }
+        }
+      });
+      renderHotelTable();
+    }
+
+    function renderHotelTable() {
+      const tbody = document.getElementById('hotel-tbody');
+      tbody.innerHTML = '';
+
+      const query = (document.getElementById('hotel-search').value || '').toLowerCase();
+
+      let filtered = allHotels.filter(h => {
+        if (hotelCategoryFilter === '5-star') return h.star_category === '5-star';
+        if (hotelCategoryFilter === '4-star') return h.star_category === '4-star';
+        if (hotelCategoryFilter === '3-star') return h.star_category === '3-star';
+        if (hotelCategoryFilter === 'received') return h.status === 'RATE_SHEET_RECEIVED';
+        return true;
+      });
+
+      if (query) {
+        filtered = filtered.filter(h => 
+          (h.name && h.name.toLowerCase().includes(query)) ||
+          (h.region && h.region.toLowerCase().includes(query)) ||
+          (h.email && h.email.toLowerCase().includes(query))
+        );
+      }
+
+      filtered.forEach(h => {
+        const tr = document.createElement('tr');
+        tr.className = 'table-row border-b border-slate-100 transition';
+
+        let badgeHtml = '<span class="px-2 py-0.5 rounded text-[11px] font-semibold badge-5star">5-Star ⭐⭐⭐⭐⭐</span>';
+        if (h.star_category === '4-star') badgeHtml = '<span class="px-2 py-0.5 rounded text-[11px] font-semibold badge-4star">4-Star ⭐⭐⭐⭐</span>';
+        if (h.star_category === '3-star') badgeHtml = '<span class="px-2 py-0.5 rounded text-[11px] font-semibold badge-3star">3-Star ⭐⭐⭐</span>';
+
+        let statusBadge = '<span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600">Discovered</span>';
+        if (h.status === 'EMAIL_SENT') statusBadge = '<span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-100 text-blue-700">Email Sent</span>';
+        if (h.status === 'RATE_SHEET_RECEIVED') statusBadge = '<span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-800 font-semibold">Rate Sheet Received</span>';
+
+        let rateSheetsHtml = '<span class="text-slate-400">None yet</span>';
+        let extractBtnHtml = '';
+
+        if (h.rate_sheets && h.rate_sheets.length > 0) {
+          rateSheetsHtml = h.rate_sheets.map(filePath => {
+            const fileName = filePath.split(/[\\/]/).pop();
+            const webPath = '/' + filePath.replace(/\\/g, '/');
+            return `<a href="${webPath}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 hover:underline bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 mr-1 mb-1">
+              <i class="fa-solid fa-file-pdf"></i> ${fileName}
+            </a>`;
+          }).join('');
+
+          extractBtnHtml = `
+            <button onclick="analyzeRateSheet('${h.place_id}')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-semibold px-2.5 py-1 rounded-lg transition inline-flex items-center gap-1 ml-1" title="AI parse this rate sheet into the Big Sheet">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> AI Extract Pricing
+            </button>
+          `;
+        }
+
+        tr.innerHTML = `
+          <td class="p-3 whitespace-nowrap">${badgeHtml}</td>
+          <td class="p-3 font-bold text-slate-900">${h.name}</td>
+          <td class="p-3 whitespace-nowrap text-slate-600">${h.region || 'Sri Lanka'}</td>
+          <td class="p-3 whitespace-nowrap">
+            ${h.email ? `<a href="mailto:${h.email}" class="text-blue-600 font-mono text-[11px]">${h.email}</a>` : '<span class="text-slate-400">Not found</span>'}
+          </td>
+          <td class="p-3 whitespace-nowrap">${statusBadge}</td>
+          <td class="p-3 max-w-xs">${rateSheetsHtml}</td>
+          <td class="p-3 whitespace-nowrap text-right">
+            ${h.email ? `<button onclick="sendInquiry('${h.place_id}')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-medium px-2.5 py-1 rounded-lg transition inline-flex items-center gap-1"><i class="fa-solid fa-paper-plane"></i> Send Request</button>` : ''}
+            ${extractBtnHtml}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function startCategoryScan() {
+      const destination = document.getElementById('scan-region-select').value || null;
+      const category = document.getElementById('scan-category-select').value;
+      const sendEmails = document.getElementById('scan-auto-email').checked;
+
+      const indicator = document.getElementById('scan-status-indicator');
+      const btn = document.getElementById('btn-start-scan');
+
+      indicator.classList.remove('hidden');
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+
+      try {
+        const res = await fetch('/api/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ category, region: destination, sendEmails })
+        });
+        const data = await res.json();
+        alert(`Targeted Search Started for ${category} in ${destination || 'Sri Lanka'}!\nInquiries will be dispatched from b2b@oceanwaytours.com.`);
+      } catch (err) {
+        alert('Scan error: ' + err.message);
+      } finally {
+        setTimeout(loadData, 5000);
+        setInterval(loadData, 15000);
+      }
+    }
+
+    async function syncInbox() {
+      const btn = document.getElementById('btn-sync-inbox');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking Inbox...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/sync-inbox', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          alert(`Inbox Sync Complete!\n• Saved ${data.downloadedCount} rate sheet files\n• Updated Big Sheet with AI extracted prices\n• Forwarded ${data.whatsappSentCount || 0} to WhatsApp`);
+          await loadData();
+        } else {
+          alert(`Inbox Sync Info: ${data.reason || 'Check Hostinger password in .env'}`);
+        }
+      } catch (err) {
+        alert('Inbox Sync Error: ' + err.message);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    async function analyzeRateSheet(placeId) {
+      try {
+        alert('Starting AI Rate Sheet Analysis... Parsing rooms, seasons, and prices into Big Sheet.');
+        const res = await fetch(`/api/analyze-rate-sheet/${placeId}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          alert('Success! Room categories and contracted rates were added to the Master Costing Big Sheet!');
+          await loadBigSheet();
+          switchMainView('bigsheet');
+        } else {
+          alert('Analysis Error: ' + (data.error || 'Failed to parse document'));
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    async function sendInquiry(placeId) {
+      try {
+        const res = await fetch(`/api/send-inquiry/${placeId}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          alert('Rate Sheet Request successfully sent to hotel from b2b@oceanwaytours.com!');
+          await loadHotels();
+        } else {
+          alert('Failed to send email: ' + (data.error || 'Check Hostinger password in .env'));
+        }
+      } catch (err) {
+        alert('Error sending request: ' + err.message);
+      }
+    }
+
+    async function batchSendInquiries() {
+      if (!confirm('Are you sure you want to send rate sheet inquiries to all uncontacted hotels?')) return;
+      try {
+        const res = await fetch('/api/send-batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ category: hotelCategoryFilter === 'received' ? 'all' : hotelCategoryFilter })
+        });
+        const data = await res.json();
+        alert(`Batch sent: ${data.sentCount} inquiries dispatched from b2b@oceanwaytours.com!`);
+        await loadHotels();
+      } catch (err) {
+        alert('Batch send error: ' + err.message);
+      }
+    }
+
+    async function openRateSheetFolder() {
+      try {
+        await fetch('/api/open-folder');
+      } catch (err) {
+        alert('Folder opening error: ' + err.message);
+      }
+    }
+
+    async function connectWhatsApp() {
+      try {
+        const res = await fetch('/api/whatsapp/connect', { method: 'POST' });
+        alert('WhatsApp connection initiated! Check your terminal if a QR code is generated.');
+      } catch (err) {
+        alert('WhatsApp connect error: ' + err.message);
+      }
+    }
+
+    // Initial load
+    loadData();
+    setInterval(loadData, 20000);
+  </script>
+</body>
+</html>

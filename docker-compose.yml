@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  oceanway-rate-hunter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: oceanway-rate-hunter
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      # Persistent storage for downloaded rate sheets
+      - ./rate_sheets:/app/rate_sheets
+      # Persistent storage for WhatsApp session authentication
+      - ./.wwebjs_auth:/app/.wwebjs_auth
+      # Persistent databases
+      - ./hotels_db.json:/app/hotels_db.json
+      - ./master_costing_sheet.json:/app/master_costing_sheet.json
+      - ./seen_hotels.json:/app/seen_hotels.json

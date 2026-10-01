@@ -1,0 +1,7 @@
+node_modules
+.wwebjs_auth
+rate_sheets
+.git
+Outreach.zip
+.wwebjs_auth_*
+*.log
