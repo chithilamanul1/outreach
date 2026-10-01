@@ -15,6 +15,20 @@ import { notifyRateSheetReceived } from "./discord_notifier.js";
 
 const BASE_RATE_SHEET_DIR = process.env.RATE_SHEETS_DIR || "rate_sheets";
 const HOTELS_DB_PATH = "hotels_db.json";
+const PROCESSED_MSGS_PATH = "processed_inbox_messages.json";
+
+function loadProcessedMessages() {
+  if (!existsSync(PROCESSED_MSGS_PATH)) return new Set();
+  try {
+    return new Set(JSON.parse(readFileSync(PROCESSED_MSGS_PATH, "utf-8")));
+  } catch {
+    return new Set();
+  }
+}
+
+function saveProcessedMessages(set) {
+  writeFileSync(PROCESSED_MSGS_PATH, JSON.stringify([...set], null, 2), "utf-8");
+}
 
 /**
  * Sanitize folder and file names for Windows filesystem
@@ -139,7 +153,13 @@ export async function syncRateSheetsFromInbox() {
     }
   });
 
+  // Catch socket and network timeouts gracefully
+  client.on("error", (err) => {
+    console.warn(`  ⚠ IMAP socket event warning: ${err.message}`);
+  });
+
   const hotels = loadHotelsDb();
+  const processedMsgs = loadProcessedMessages();
   let downloadedCount = 0;
   let updatedHotelsCount = 0;
   let whatsappSentCount = 0;
@@ -160,6 +180,11 @@ export async function syncRateSheetsFromInbox() {
           const parsed = await simpleParser(msg.source);
           const fromEmail = parsed.from?.value?.[0]?.address || "";
           const subject = parsed.subject || "";
+          const messageKey = parsed.messageId || `${fromEmail}_${msg.uid || subject}`;
+
+          if (processedMsgs.has(messageKey)) {
+            continue;
+          }
 
           // Check if email has attachments
           if (!parsed.attachments || parsed.attachments.length === 0) {
@@ -233,6 +258,10 @@ export async function syncRateSheetsFromInbox() {
             matchedHotel.reply_received_at = new Date().toISOString();
             updatedHotelsCount++;
           }
+
+          // Mark message as processed so it is never re-forwarded or duplicated
+          processedMsgs.add(messageKey);
+          saveProcessedMessages(processedMsgs);
         } catch (parseErr) {
           console.warn(`  ⚠ Error parsing email: ${parseErr.message}`);
         }

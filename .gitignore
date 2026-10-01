@@ -12,6 +12,7 @@ wa_conversations.json
 wa_sent.json
 seen_leads.json
 leads_db.json
+processed_inbox_messages.json
 rate_sheets/3_star/*
 rate_sheets/4_star/*
 rate_sheets/5_star/*

@@ -259,8 +259,8 @@ app.get('/api/open-folder', (req, res) => {
   }
 });
 
-// ─── PERIODIC BACKGROUND INBOX MONITOR (EVERY 5 MINUTES) ──────────────────────
-const AUTO_SYNC_INTERVAL_MS = 5 * 60 * 1000;
+// ─── PERIODIC BACKGROUND INBOX MONITOR (EVERY 2 MINUTES) ──────────────────────
+const AUTO_SYNC_INTERVAL_MS = 2 * 60 * 1000;
 setInterval(async () => {
   const user = process.env.IMAP_USER || process.env.SMTP_USER || process.env.EMAIL_USER;
   if (user) {
@@ -269,10 +269,26 @@ setInterval(async () => {
   }
 }, AUTO_SYNC_INTERVAL_MS);
 
-// ─── START SERVER ─────────────────────────────────────────────────────────────
+// ─── START SERVER & BACKGROUND SERVICES ───────────────────────────────────────
 
 app.listen(PORT, () => {
   console.log(`\n================================================================`);
   console.log(`🏨 Travel Agency Hotel Rate Sheet Manager running at http://localhost:${PORT}`);
   console.log(`================================================================\n`);
+
+  // Pre-initialize WhatsApp client so incoming rate sheets forward immediately
+  const adminPhone = process.env.ADMIN_WHATSAPP_NUMBER;
+  if (adminPhone) {
+    console.log(`📱 Pre-connecting WhatsApp for automatic delivery to ${adminPhone}...`);
+    initWhatsApp().catch((err) => console.warn(`⚠ WhatsApp pre-init warning: ${err.message}`));
+  }
+
+  // Initial startup inbox scan after 5 seconds
+  setTimeout(async () => {
+    const user = process.env.IMAP_USER || process.env.SMTP_USER || process.env.EMAIL_USER;
+    if (user) {
+      console.log('📬 Initial startup inbox check for newly arrived rate sheets...');
+      await syncRateSheetsFromInbox().catch(() => {});
+    }
+  }, 5000);
 });
