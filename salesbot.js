@@ -121,7 +121,7 @@ Also add action tags if applicable on a new line:
 Output ONLY your reply message followed by the classification tag. Nothing else.`;
 
 async function getAIReply(conversationHistory, businessName) {
-  const model = process.env.OPENROUTER_MODEL || "anthropic/claude-3-haiku";
+  const model = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
 
   const messages = [
     { role: "system", content: SALES_SYSTEM_PROMPT },

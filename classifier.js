@@ -80,7 +80,7 @@ Respond in EXACT JSON format:
         "X-Title": "Hotel Star Classifier",
       },
       body: JSON.stringify({
-        model: model || "anthropic/claude-3-haiku",
+        model: model || "google/gemini-2.5-flash",
         messages: [{ role: "user", content: prompt }],
         max_tokens: 150,
         temperature: 0.2,

@@ -57,7 +57,7 @@ Requirements:
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        model: process.env.OPENROUTER_MODEL || "anthropic/claude-3-haiku",
+                        model: process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash",
                         messages: [{ role: "user", content: prompt }],
                         max_tokens: 300,
                         temperature: 0.5,

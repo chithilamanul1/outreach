@@ -106,14 +106,13 @@ function readDocumentContent(filePath) {
     }
   }
 
-  if (ext === "pdf") {
-    try {
-      const fileBuffer = readFileSync(filePath);
-      const base64Data = fileBuffer.toString("base64");
-      return { type: "pdf", content: base64Data };
-    } catch (err) {
-      return { type: "error", error: err.message };
+  try {
+    const fileBuffer = readFileSync(filePath);
+    if (ext === "pdf" || fileBuffer.subarray(0, 4).toString() === "%PDF") {
+      return { type: "pdf", content: fileBuffer.toString("base64") };
     }
+  } catch (err) {
+    return { type: "error", error: err.message };
   }
 
   // Plain text fallback
@@ -168,7 +167,7 @@ Do NOT return markdown formatting or extra commentary. Return pure JSON array on
   try {
     let messageContent;
     // Prefer multimodal model for PDF or default model
-    const model = process.env.OPENROUTER_MODEL || (doc.type === "pdf" ? "google/gemini-2.5-flash" : "anthropic/claude-3-haiku");
+    const model = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
 
     if (doc.type === "pdf") {
       const fileName = filePath.split(/[\\/]/).pop() || "rates.pdf";

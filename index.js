@@ -123,7 +123,7 @@ export async function harvestHotelsForCategory(categoryKey, regionFilter = null,
   }
 
   const openRouterKey = process.env.OPENROUTER_API_KEY;
-  const openRouterModel = process.env.OPENROUTER_MODEL || "anthropic/claude-3-haiku";
+  const openRouterModel = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
 
   console.log(`\n════════════════════════════════════════════════════════════════`);
   console.log(`🏨 Searching ${catConfig.badge} ${catConfig.name} in Sri Lanka`);
