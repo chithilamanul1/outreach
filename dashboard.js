@@ -61,7 +61,7 @@ app.post('/api/scan', async (req, res) => {
     return res.status(400).json({ error: 'A scan is already in progress.' });
   }
 
-  const { category = '5-star', region = null, sendEmails = false } = req.body;
+  const { category = '4-star', region = null, sendEmails = false } = req.body;
 
   isScanning = true;
   scanStatus = { running: true, category, region, log: `Started scan for ${category}...` };

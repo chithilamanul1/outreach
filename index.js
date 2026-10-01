@@ -138,8 +138,22 @@ export async function harvestHotelsForCategory(categoryKey, regionFilter = null,
   let emailsFoundCount = 0;
   let emailsSentCount = 0;
 
+  const maxQuota = catConfig.maxPerLocation || (categoryKey === "5-star" ? 2 : 15);
+
   for (const queryTerm of catConfig.searchQueries) {
     for (const region of regionsToSearch) {
+      // Check if quota for this category in this region is already filled
+      const existingInRegion = hotelsDb.filter(
+        (h) => h.region === region && h.star_category === categoryKey
+      ).length;
+
+      if (existingInRegion >= maxQuota) {
+        if (categoryKey === "5-star") {
+          console.log(`  ⏹ 5-Star quota satisfied for ${region} (${existingInRegion}/${maxQuota} hotels).`);
+        }
+        continue;
+      }
+
       const query = `${queryTerm} in ${region}, Sri Lanka`;
       console.log(`🔍 Query: "${query}"`);
 
@@ -147,6 +161,15 @@ export async function harvestHotelsForCategory(categoryKey, regionFilter = null,
       await sleep(API_DELAY_MS);
 
       for (const place of results) {
+        // Enforce quota before processing each place
+        const currentCount = hotelsDb.filter(
+          (h) => h.region === region && h.star_category === categoryKey
+        ).length;
+        if (currentCount >= maxQuota) {
+          console.log(`  ✅ Quota reached for ${catConfig.name} in ${region} (${currentCount}/${maxQuota}).`);
+          break;
+        }
+
         const placeId = place.place_id;
 
         // Skip if already in DB
@@ -268,7 +291,7 @@ async function main() {
   }
 
   const categoriesToRun =
-    targetCategory === "all" ? ["5-star", "4-star", "3-star"] : [targetCategory];
+    targetCategory === "all" ? ["4-star", "3-star", "5-star"] : [targetCategory];
 
   for (const cat of categoriesToRun) {
     await harvestHotelsForCategory(cat, targetRegion, {

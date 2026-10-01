@@ -9,7 +9,19 @@ const SCRAPE_TIMEOUT_MS = 10000;
 
 // Extensions and patterns to ignore
 const IGNORED_EXTENSIONS = /\.(png|jpg|jpeg|gif|svg|webp|bmp|tiff|woff|woff2|ttf|eot|js|css)$/i;
-const IGNORED_DOMAINS = ["sentry.io", "wix.com", "wordpress.org", "schema.org", "google.com", "example.com"];
+const IGNORED_DOMAINS = [
+  "sentry.io",
+  "wix.com",
+  "wixpress.com",
+  "mysite.com",
+  "hotelonia.com",
+  "xtadia.com",
+  "wordpress.org",
+  "schema.org",
+  "google.com",
+  "example.com",
+  "domain.com"
+];
 
 // Department priority scores (higher is better for travel agency rate requests)
 const PRIORITY_KEYWORDS = [

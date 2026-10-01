@@ -4,30 +4,36 @@
  */
 
 export const STAR_CATEGORIES = {
-  "3-star": {
-    id: "3-star",
-    name: "3-Star Hotels",
-    starRating: 3,
-    badge: "⭐⭐⭐",
-    folder: "3_star",
-    searchQueries: [
-      "3 star hotel",
-      "three star hotel",
-      "3 star beach resort",
-      "3 star boutique hotel"
-    ]
-  },
   "4-star": {
     id: "4-star",
     name: "4-Star Hotels",
     starRating: 4,
     badge: "⭐⭐⭐⭐",
     folder: "4_star",
+    priority: 1, // Primary Travel Agency inventory
+    maxPerLocation: 15,
     searchQueries: [
       "4 star hotel",
       "four star hotel",
       "4 star luxury resort",
-      "4 star boutique hotel"
+      "4 star boutique hotel",
+      "4 star beach resort"
+    ]
+  },
+  "3-star": {
+    id: "3-star",
+    name: "3-Star Hotels",
+    starRating: 3,
+    badge: "⭐⭐⭐",
+    folder: "3_star",
+    priority: 2, // Primary Travel Agency inventory
+    maxPerLocation: 15,
+    searchQueries: [
+      "3 star hotel",
+      "three star hotel",
+      "3 star beach resort",
+      "3 star boutique hotel",
+      "3 star resort"
     ]
   },
   "5-star": {
@@ -36,11 +42,11 @@ export const STAR_CATEGORIES = {
     starRating: 5,
     badge: "⭐⭐⭐⭐⭐",
     folder: "5_star",
+    priority: 3, // Capped: only 1-2 premier 5-star hotels per destination
+    maxPerLocation: 2,
     searchQueries: [
-      "5 star hotel",
-      "five star hotel",
-      "5 star luxury resort",
-      "5 star hotel and spa"
+      "5 star luxury hotel",
+      "5 star resort"
     ]
   }
 };
