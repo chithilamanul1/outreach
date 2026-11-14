@@ -445,19 +445,35 @@
         </div>
 
         <div class="border-t border-surface-700/60 pt-3">
-          <div class="font-bold text-slate-200 mb-2">Hostinger / SMTP Email Settings</div>
+          <div class="flex items-center justify-between mb-2">
+            <div class="font-bold text-slate-200">Email Configuration (Resend / Hostinger / SMTP)</div>
+            <span class="text-[10px] text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded border border-brand-500/20">Resend API & SMTP</span>
+          </div>
+
+          <div class="bg-surface-850 p-3 rounded-xl border border-surface-700 mb-3 space-y-1.5">
+            <label class="block font-semibold text-slate-300">Resend API Key (Fastest for info@seranex.lk)</label>
+            <input type="password" id="cfg-resend-key" placeholder="re_xxxxxxxxxxxxxxxxxxxx" class="w-full bg-surface-900 border border-surface-700 rounded-xl p-2 text-xs text-slate-200">
+            <p class="text-[10px] text-slate-400">Get your API key at <a href="https://resend.com/api-keys" target="_blank" class="text-brand-400 hover:underline">resend.com/api-keys</a></p>
+          </div>
+
+          <div class="mb-3">
+            <label class="block font-semibold text-slate-300 mb-1">Sender Email Address (From)</label>
+            <input type="email" id="cfg-email-from" placeholder="info@seranex.lk" class="w-full bg-surface-900 border border-surface-700 rounded-xl p-2 text-xs text-slate-200">
+          </div>
+
+          <div class="text-[11px] font-semibold text-slate-400 mb-1">Or Standard SMTP (Resend / Hostinger / cPanel)</div>
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block text-slate-400 mb-1">SMTP Host</label>
-              <input type="text" id="cfg-smtp-host" placeholder="smtp.hostinger.com" class="w-full bg-surface-900 border border-surface-700 rounded-xl p-2 text-xs text-slate-200">
+              <input type="text" id="cfg-smtp-host" placeholder="smtp.resend.com" class="w-full bg-surface-900 border border-surface-700 rounded-xl p-2 text-xs text-slate-200">
             </div>
             <div>
               <label class="block text-slate-400 mb-1">SMTP Port</label>
               <input type="text" id="cfg-smtp-port" placeholder="465" class="w-full bg-surface-900 border border-surface-700 rounded-xl p-2 text-xs text-slate-200">
             </div>
             <div>
-              <label class="block text-slate-400 mb-1">SMTP User / Email</label>
-              <input type="text" id="cfg-smtp-user" placeholder="hello@seranex.lk" class="w-full bg-surface-900 border border-surface-700 rounded-xl p-2 text-xs text-slate-200">
+              <label class="block text-slate-400 mb-1">SMTP User</label>
+              <input type="text" id="cfg-smtp-user" placeholder="resend (for Resend) or email" class="w-full bg-surface-900 border border-surface-700 rounded-xl p-2 text-xs text-slate-200">
             </div>
             <div>
               <label class="block text-slate-400 mb-1">SMTP Password</label>
@@ -1118,6 +1134,8 @@
       fetch('/api/settings').then(r => r.json()).then(cfg => {
         document.getElementById('cfg-places-key').value = cfg.googlePlacesKeyConfigured ? '••••••••' : '';
         document.getElementById('cfg-openrouter-key').value = cfg.openRouterKeyConfigured ? '••••••••' : '';
+        document.getElementById('cfg-resend-key').value = cfg.resendKeyConfigured ? '••••••••' : '';
+        document.getElementById('cfg-email-from').value = cfg.emailFrom || 'info@seranex.lk';
         document.getElementById('cfg-discord-webhook').value = cfg.discordWebhook || '';
         document.getElementById('cfg-smtp-host').value = cfg.smtpHost || '';
         document.getElementById('cfg-smtp-port').value = cfg.smtpPort || '465';
@@ -1130,6 +1148,8 @@
     async function saveSettingsConfig() {
       const placesKey = document.getElementById('cfg-places-key').value;
       const openRouterKey = document.getElementById('cfg-openrouter-key').value;
+      const resendApiKey = document.getElementById('cfg-resend-key').value;
+      const emailFrom = document.getElementById('cfg-email-from').value;
       const discordWebhook = document.getElementById('cfg-discord-webhook').value;
       const smtpHost = document.getElementById('cfg-smtp-host').value;
       const smtpPort = document.getElementById('cfg-smtp-port').value;
@@ -1142,11 +1162,13 @@
         smtpHost,
         smtpPort,
         smtpUser,
+        emailFrom,
         adminWhatsApp
       };
 
       if (placesKey && !placesKey.startsWith('•••')) payload.googlePlacesKey = placesKey;
       if (openRouterKey && !openRouterKey.startsWith('•••')) payload.openRouterKey = openRouterKey;
+      if (resendApiKey && !resendApiKey.startsWith('•••')) payload.resendApiKey = resendApiKey;
       if (smtpPass) payload.smtpPass = smtpPass;
 
       try {

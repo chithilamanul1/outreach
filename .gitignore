@@ -16,4 +16,9 @@ processed_inbox_messages.json
 rate_sheets/3_star/*
 rate_sheets/4_star/*
 rate_sheets/5_star/*
-!rate_sheets/Master_SriLanka_Hotel_Costing_Sheet.xlsx
+public/whatsapp_qr.*
+public/whatsapp_qr.html
+public/whatsapp_qr.png
+automation_config.json
+
+

@@ -3,19 +3,30 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { AGENCY_PROFILE, CORE_SERVICES } from "./config/businessCategories.js";
 
 /**
- * Configure SMTP transporter
- * Supports Hostinger, cPanel, Webmail, Titan, and Gmail
+ * Configure email sender (Resend API, Resend SMTP, Hostinger/cPanel, or Gmail)
  */
-export function getTransporter() {
+export function getEmailProvider() {
+  const resendKey = process.env.RESEND_API_KEY;
   const smtpUser = process.env.SMTP_USER || process.env.EMAIL_USER;
   const smtpPass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
   const smtpHost = process.env.SMTP_HOST || "smtp.hostinger.com";
   const smtpPort = parseInt(process.env.SMTP_PORT || "465", 10);
   const smtpSecure = process.env.SMTP_SECURE === "false" ? false : (smtpPort === 465);
+  const fromEmail = process.env.EMAIL_FROM || process.env.SMTP_FROM || (smtpUser === "resend" ? "info@seranex.lk" : (smtpUser || "info@seranex.lk"));
 
-  // 1. Hostinger / Custom Hosting SMTP
+  // 1. Resend REST API (Highest reliability, fast, no open SMTP ports required)
+  if (resendKey) {
+    return {
+      type: "resend_api",
+      apiKey: resendKey,
+      fromEmail
+    };
+  }
+
+  // 2. SMTP (Resend SMTP, Hostinger, cPanel, Titan, AWS SES)
   if (smtpUser && smtpPass) {
     return {
+      type: "smtp",
       transporter: nodemailer.createTransport({
         host: smtpHost,
         port: smtpPort,
@@ -29,13 +40,14 @@ export function getTransporter() {
           rejectUnauthorized: false
         }
       }),
-      fromEmail: smtpUser
+      fromEmail
     };
   }
 
-  // 2. Gmail Fallback
+  // 3. Gmail Fallback
   if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
     return {
+      type: "gmail",
       transporter: nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -48,6 +60,10 @@ export function getTransporter() {
   }
 
   return null;
+}
+
+export function getTransporter() {
+  return getEmailProvider();
 }
 
 /**
@@ -156,13 +172,13 @@ export function generateSeranixHtmlEmail(lead, pitch) {
 }
 
 /**
- * Send personalized B2B outreach email to a prospect business
+ * Send personalized B2B outreach email to a prospect business (supports Resend API & SMTP)
  */
 export async function sendSeranixOutreachEmail(recipientEmail, lead, customPitch = null) {
-  const mailConfig = getTransporter();
-  if (!mailConfig) {
-    console.warn("  ⚠ SMTP not configured. Cannot send email.");
-    return { success: false, reason: "SMTP not configured" };
+  const provider = getEmailProvider();
+  if (!provider) {
+    console.warn("  ⚠ Email provider not configured (Requires RESEND_API_KEY or SMTP credentials).");
+    return { success: false, reason: "Email provider not configured" };
   }
 
   const pitch = customPitch || {
@@ -171,22 +187,56 @@ export async function sendSeranixOutreachEmail(recipientEmail, lead, customPitch
   };
 
   const htmlContent = generateSeranixHtmlEmail(lead, pitch);
+  const senderFormatted = `"Seranex Lanka Solutions" <${provider.fromEmail}>`;
 
+  // 1. Resend API Dispatch
+  if (provider.type === "resend_api") {
+    try {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${provider.apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          from: senderFormatted,
+          to: [recipientEmail],
+          reply_to: provider.fromEmail,
+          subject: pitch.email_subject,
+          html: htmlContent,
+          text: pitch.email_body
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || `Resend API error (${res.status})`);
+      }
+
+      console.log(`  ✅ [Email Dispatched via Resend API] Sent to ${recipientEmail} (ID: ${data.id})`);
+      return { success: true, messageId: data.id };
+    } catch (err) {
+      console.error(`  ✖ [Resend API Failed] Error sending to ${recipientEmail}: ${err.message}`);
+      return { success: false, reason: err.message };
+    }
+  }
+
+  // 2. SMTP Dispatch (Resend SMTP, Hostinger, Gmail)
   const mailOptions = {
-    from: `"Seranex Lanka Solutions" <${mailConfig.fromEmail}>`,
+    from: senderFormatted,
     to: recipientEmail,
-    replyTo: mailConfig.fromEmail,
+    replyTo: provider.fromEmail,
     subject: pitch.email_subject,
     text: pitch.email_body,
     html: htmlContent
   };
 
   try {
-    const info = await mailConfig.transporter.sendMail(mailOptions);
-    console.log(`  ✅ [Email Dispatched] Sent to ${recipientEmail} (ID: ${info.messageId})`);
+    const info = await provider.transporter.sendMail(mailOptions);
+    console.log(`  ✅ [Email Dispatched via SMTP] Sent to ${recipientEmail} (ID: ${info.messageId})`);
     return { success: true, messageId: info.messageId };
   } catch (err) {
-    console.error(`  ✖ [Email Failed] Error sending to ${recipientEmail}: ${err.message}`);
+    console.error(`  ✖ [SMTP Failed] Error sending to ${recipientEmail}: ${err.message}`);
     return { success: false, reason: err.message };
   }
 }
