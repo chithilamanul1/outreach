@@ -819,7 +819,7 @@ app.post('/api/whatsapp/connect', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`\n════════════════════════════════════════════════════════════════`);
-  console.log(`🚀 SERANIX DIGITAL - 24/7 AI OUTREACH & SALES COMMAND CENTER`);
+  console.log(`🚀 SERANEX LANKA SOLUTIONS - 24/7 AI OUTREACH & SALES COMMAND CENTER`);
   console.log(`🌐 Live Dashboard: http://localhost:${PORT}`);
   console.log(`💼 Unified Growth: Software • Websites • Video Ad Marketing`);
   console.log(`📞 Hotline: 07228382638 | Web: https://seranex.lk`);
@@ -835,7 +835,7 @@ app.listen(PORT, () => {
   // Pre-initialize WhatsApp if phone configured
   const botPhone = process.env.BOT_WHATSAPP_NUMBER;
   if (botPhone) {
-    console.log(`📱 Pre-connecting WhatsApp for Seranix Digital Outreach...`);
+    console.log(`📱 Pre-connecting WhatsApp for Seranex Lanka Solutions Outreach...`);
     initWhatsApp().catch(err => console.warn(`⚠ WhatsApp pre-init warning: ${err.message}`));
   }
 });
