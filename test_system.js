@@ -1,52 +1,82 @@
-import { STAR_CATEGORIES, SRI_LANKA_REGIONS } from "./config/hotelCategories.js";
-import { quickFilter } from "./classifier.js";
-import { sanitizeFilename, getCategoryFolder, saveRateSheetAttachment } from "./inbox_harvester.js";
-import { generateRateInquiryText } from "./email.js";
-import { existsSync, readFileSync } from "node:fs";
+import { AGENCY_PROFILE, BUSINESS_VERTICALS, TARGET_REGIONS, CORE_SERVICES } from "./config/businessCategories.js";
+import { auditBusiness, generateFallbackPitch } from "./classifier.js";
+import { generateSeranixHtmlEmail } from "./email.js";
+import { cleanPhoneNumber, formatPhoneForWhatsApp } from "./whatsapp.js";
+import { parseAIResponse } from "./salesbot.js";
 
-console.log("🧪 Running System Component Tests...\n");
+console.log("🧪 Running Seranex Lanka Solutions Component Verification Tests...\n");
 
-// 1. Test Categories
-console.log("1. Checking Star Categories:");
-for (const [key, cat] of Object.entries(STAR_CATEGORIES)) {
-  console.log(`   ✔ ${cat.badge} ${cat.name} (queries: ${cat.searchQueries.length}, folder: ${cat.folder})`);
-}
-console.log(`   ✔ Regions configured: ${SRI_LANKA_REGIONS.length} destinations across Sri Lanka.`);
+// 1. Verify Agency Profile & Verticals
+console.log(`1. Checking Agency Identity:`);
+console.log(`   ✔ Name: ${AGENCY_PROFILE.name}`);
+console.log(`   ✔ Website: ${AGENCY_PROFILE.website}`);
+console.log(`   ✔ Hotline: ${AGENCY_PROFILE.hotline} (${AGENCY_PROFILE.hotlineIntl})`);
+console.log(`   ✔ Verticals Configured: ${Object.keys(BUSINESS_VERTICALS).length} industries`);
+console.log(`   ✔ Core Services: ${Object.keys(CORE_SERVICES).map(k => CORE_SERVICES[k].name).join(" | ")}`);
 
-// 2. Test Classifier
-console.log("\n2. Checking Classifier Quick-Filter:");
-const testGuesthouse = { name: "Budget Backpacker Homestay Ella" };
-const test5StarHotel = { name: "Cinnamon Grand Colombo" };
-const filterResult1 = quickFilter(testGuesthouse, "5-star");
-const filterResult2 = quickFilter(test5StarHotel, "5-star");
-console.log(`   ✔ 5-star filter on '${testGuesthouse.name}': rejected=${!filterResult1.valid} (reason: ${filterResult1.reason})`);
-console.log(`   ✔ 5-star filter on '${test5StarHotel.name}': accepted=${filterResult2.valid}`);
+// 2. Test Business Audit Classifier
+console.log(`\n2. Testing Intelligent Business Audit:`);
+const mockRestaurant = {
+  name: "Negombo Seafood Bistro & Cafe",
+  formatted_address: "Lewis Place, Negombo, Sri Lanka",
+  formatted_phone_number: "072 283 8268",
+  website: null,
+  rating: 4.8,
+  user_ratings_total: 210
+};
 
-if (filterResult1.valid === false && filterResult2.valid === true) {
-  console.log("   ✅ Category filter logic passed!");
+const auditResult = auditBusiness(mockRestaurant, "restaurants");
+console.log(`   ✔ Prospect: ${auditResult.name}`);
+console.log(`   ✔ Website Status: ${auditResult.website_status}`);
+console.log(`   ✔ Opportunity Score: ${auditResult.opportunity_score}/100`);
+console.log(`   ✔ Recommended Service: ${auditResult.service_details.name}`);
+console.log(`   ✔ Detected Needs: ${auditResult.detected_needs.join("; ")}`);
+
+if (auditResult.opportunity_score >= 80 && auditResult.website_status === "none") {
+  console.log("   ✅ Opportunity Classifier logic passed!");
 } else {
-  console.error("   ❌ Filter test failed!");
+  console.error("   ❌ Opportunity Classifier test failed!");
 }
 
-// 3. Test Filename & Folder Sanitizer
-console.log("\n3. Testing Folder Structure & Attachment Saver:");
-const testHotel = "Heritance Kandalama: Luxury Hotel / Dambulla*";
-const cleanName = sanitizeFilename(testHotel);
-console.log(`   ✔ Sanitized folder name: "${cleanName}"`);
+// 3. Test Fallback Pitch Generation
+console.log(`\n3. Testing Pitch Generator:`);
+const pitch = generateFallbackPitch(auditResult);
+console.log(`   ✔ Email Subject: "${pitch.email_subject}"`);
+console.log(`   ✔ WhatsApp Message Length: ${pitch.whatsapp_pitch.length} chars`);
+console.log(`   ✔ Sample Pitch Snippet: "${pitch.whatsapp_pitch.slice(0, 110)}..."`);
 
-const dummyBuffer = Buffer.from("Sample Rate Sheet PDF Content 2026-2027");
-const savedPath = saveRateSheetAttachment("5-star", testHotel, "Tariff_2026.pdf", dummyBuffer);
-console.log(`   ✔ File saved to: ${savedPath}`);
-if (existsSync(savedPath)) {
-  console.log("   ✅ Folder-by-folder attachment saving verified!");
+// 4. Test HTML Email Generation
+console.log(`\n4. Testing Seranex Branded HTML Email Template:`);
+const html = generateSeranixHtmlEmail(mockRestaurant, pitch);
+if (html.includes("SERANEX") && html.includes("seranex.lk")) {
+  console.log(`   ✅ HTML Email Template generated cleanly (${html.length} bytes)!`);
 } else {
-  console.error("   ❌ Attachment saving failed!");
+  console.error(`   ❌ HTML Email Template missing Seranex Lanka Solutions branding.`);
 }
 
-// 4. Test Email Template
-console.log("\n4. Testing B2B Rate Sheet Inquiry Template:");
-const emailSample = generateRateInquiryText("Jetwing Lighthouse", "5-Star Luxury Resort");
-console.log("   ✔ Generated email inquiry preview (first 180 chars):");
-console.log("   \"" + emailSample.slice(0, 180).replace(/\n/g, " ") + "...\"");
+// 5. Test Phone Sanitization
+console.log(`\n5. Testing WhatsApp Phone Formatting:`);
+const rawPhone = "07228382638";
+const clean = cleanPhoneNumber(rawPhone);
+const waChatId = formatPhoneForWhatsApp(rawPhone);
+console.log(`   ✔ Raw: "${rawPhone}" -> Cleaned: "${clean}" -> WhatsApp ChatID: "${waChatId}"`);
+if (waChatId === "947228382638@c.us") {
+  console.log("   ✅ Phone sanitization passed!");
+} else {
+  console.error("   ❌ Phone sanitization failed!");
+}
 
-console.log("\n🎉 ALL LOCAL COMPONENT TESTS PASSED!\n");
+// 6. Test AI Salesbot Parser
+console.log(`\n6. Testing Salesbot Response & Classification Parser:`);
+const sampleLLMOutput = `We can definitely build a custom online reservation system for your restaurant in 2 days! Would 3 PM tomorrow work for a quick demo?\n[LEAD:HOT]\n[ACTION:SEND_PORTFOLIO]`;
+const parsed = parseAIResponse(sampleLLMOutput);
+console.log(`   ✔ Detected Classification: ${parsed.classification}`);
+console.log(`   ✔ Detected Action: ${parsed.action}`);
+console.log(`   ✔ Clean Message: "${parsed.message}"`);
+if (parsed.classification === "HOT" && parsed.action === "SEND_PORTFOLIO") {
+  console.log("   ✅ Salesbot parser passed!");
+} else {
+  console.error("   ❌ Salesbot parser failed!");
+}
+
+console.log("\n🎉 ALL LOCAL SERANEX LANKA SOLUTIONS COMPONENT TESTS PASSED!\n");

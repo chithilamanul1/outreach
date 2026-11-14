@@ -1,73 +1,59 @@
 #!/usr/bin/env node
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Sri Lanka Travel Agency - Hotel Rate Sheet Harvester
-// Discovers 3-star, 4-star, and 5-star hotels category-by-category across Sri Lanka,
-// scrapes reservation emails, dispatches B2B rate sheet requests,
-// and organizes received rate sheets into folders.
+// Seranex Lanka Solutions - Autonomous Outreach Business Maker & Client Acquisition CLI
+// ─────────────────────────────────────────────────────────────────────────────
+// Discovers businesses across target industries (Restaurants, Hotels, Healthcare,
+// Real Estate, Retail, Services), audits digital gaps (No website, broken web,
+// missing booking/CRM software, no video ads), crafts AI hyper-personalized pitches,
+// and executes multi-channel cold outreach (Email & WhatsApp) to close sales.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { setTimeout as sleep } from "node:timers/promises";
-import { STAR_CATEGORIES, SRI_LANKA_REGIONS } from "./config/hotelCategories.js";
-import { quickFilter, verifyStarRating } from "./classifier.js";
-import { scrapeHotelEmails } from "./email_scraper.js";
-import { sendRateSheetInquiry, generateRateInquiryText } from "./email.js";
-import { syncRateSheetsFromInbox } from "./inbox_harvester.js";
-import { notifyHotelDiscovered, notifyInquirySent } from "./discord_notifier.js";
+import { AGENCY_PROFILE, BUSINESS_VERTICALS, TARGET_REGIONS, CORE_SERVICES } from "./config/businessCategories.js";
+import { auditBusiness, generateAIPitch } from "./classifier.js";
+import { scrapeWebsiteEmails } from "./email_scraper.js";
+import { sendSeranixOutreachEmail } from "./email.js";
+import { sendWhatsAppOutreach } from "./whatsapp.js";
+import { notifyLeadDiscovered, notifyOutreachDispatched } from "./discord_notifier.js";
 
-// ─── CONFIG & PATHS ────────────────────────────────────────────────────────────
+// ─── CONFIG & PERSISTENCE PATHS ───────────────────────────────────────────────
 
-const API_DELAY_MS = 350;
-const HOTELS_DB_PATH = "hotels_db.json";
-const SEEN_HOTELS_PATH = "seen_hotels.json";
+const LEADS_DB_PATH = "leads_db.json";
+const SEEN_LEADS_PATH = "seen_leads.json";
+const API_DELAY_MS = 400;
 
-// ─── CLI ARGUMENTS ─────────────────────────────────────────────────────────────
-
-const args = process.argv.slice(2);
-const DRY_RUN = args.includes("--dry-run");
-const SYNC_INBOX_ONLY = args.includes("--sync-inbox");
-const SEND_EMAILS = !DRY_RUN && !args.includes("--no-email");
-
-// Parse category: default to 5-star if not specified, or all
-let targetCategoryArg = args.find((a) => a.startsWith("--category="));
-let targetCategory = targetCategoryArg ? targetCategoryArg.split("=")[1].toLowerCase() : "5-star";
-
-let targetRegionArg = args.find((a) => a.startsWith("--region="));
-let targetRegion = targetRegionArg ? targetRegionArg.split("=")[1] : null;
-
-// ─── DATABASE HELPERS ──────────────────────────────────────────────────────────
-
-export function loadHotelsDb() {
-  if (!existsSync(HOTELS_DB_PATH)) return [];
+export function loadLeadsDb() {
+  if (!existsSync(LEADS_DB_PATH)) return [];
   try {
-    return JSON.parse(readFileSync(HOTELS_DB_PATH, "utf-8"));
+    return JSON.parse(readFileSync(LEADS_DB_PATH, "utf-8"));
   } catch {
     return [];
   }
 }
 
-export function saveHotelsDb(hotels) {
-  writeFileSync(HOTELS_DB_PATH, JSON.stringify(hotels, null, 2), "utf-8");
+export function saveLeadsDb(leads) {
+  writeFileSync(LEADS_DB_PATH, JSON.stringify(leads, null, 2), "utf-8");
 }
 
-function loadSeenHotels() {
-  if (!existsSync(SEEN_HOTELS_PATH)) return new Set();
+export function loadSeenLeads() {
+  if (!existsSync(SEEN_LEADS_PATH)) return new Set();
   try {
-    const data = JSON.parse(readFileSync(SEEN_HOTELS_PATH, "utf-8"));
+    const data = JSON.parse(readFileSync(SEEN_LEADS_PATH, "utf-8"));
     return new Set(data);
   } catch {
     return new Set();
   }
 }
 
-function saveSeenHotels(seenSet) {
-  writeFileSync(SEEN_HOTELS_PATH, JSON.stringify([...seenSet], null, 2), "utf-8");
+export function saveSeenLeads(seenSet) {
+  writeFileSync(SEEN_LEADS_PATH, JSON.stringify([...seenSet], null, 2), "utf-8");
 }
 
-// ─── GOOGLE PLACES API ─────────────────────────────────────────────────────────
+// ─── GOOGLE PLACES API CLIENT ─────────────────────────────────────────────────
 
-async function searchPlaces(query, apiKey) {
+export async function searchPlaces(query, apiKey) {
   const url = new URL("https://maps.googleapis.com/maps/api/place/textsearch/json");
   url.searchParams.set("query", query);
   url.searchParams.set("key", apiKey);
@@ -87,7 +73,7 @@ async function searchPlaces(query, apiKey) {
   }
 }
 
-async function getPlaceDetails(placeId, apiKey) {
+export async function getPlaceDetails(placeId, apiKey) {
   const url = new URL("https://maps.googleapis.com/maps/api/place/details/json");
   url.searchParams.set("place_id", placeId);
   url.searchParams.set(
@@ -100,222 +86,180 @@ async function getPlaceDetails(placeId, apiKey) {
     const res = await fetch(url.toString());
     if (!res.ok) return null;
     const data = await res.json();
-    if (data.status !== "OK") return null;
     return data.result || null;
-  } catch {
+  } catch (err) {
+    console.warn(`  ⚠ Place Details error: ${err.message}`);
     return null;
   }
 }
 
-// ─── HARVESTING ENGINE ─────────────────────────────────────────────────────────
+// ─── CORE DISCOVERY & OUTREACH PIPELINE ───────────────────────────────────────
 
-export async function harvestHotelsForCategory(categoryKey, regionFilter = null, options = {}) {
-  const catConfig = STAR_CATEGORIES[categoryKey];
-  if (!catConfig) {
-    console.error(`✖ Unknown star category: ${categoryKey}. Use: 3-star, 4-star, or 5-star.`);
-    return [];
-  }
-
+export async function discoverLeadsForCategory(verticalKey = "restaurants", targetRegion = null, options = {}) {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  const model = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
+
   if (!apiKey) {
-    console.error("✖ Missing GOOGLE_PLACES_API_KEY in .env");
-    return [];
+    throw new Error("GOOGLE_PLACES_API_KEY is not set in environment.");
   }
 
-  const openRouterKey = process.env.OPENROUTER_API_KEY;
-  const openRouterModel = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
+  const vertical = BUSINESS_VERTICALS[verticalKey] || BUSINESS_VERTICALS.restaurants;
+  const regionsToScan = targetRegion ? [targetRegion] : TARGET_REGIONS.sri_lanka.cities.slice(0, 5);
 
-  console.log(`\n════════════════════════════════════════════════════════════════`);
-  console.log(`🏨 Searching ${catConfig.badge} ${catConfig.name} in Sri Lanka`);
-  if (regionFilter) console.log(`📍 Filtered to Region: ${regionFilter}`);
-  console.log(`════════════════════════════════════════════════════════════════\n`);
+  const leads = loadLeadsDb();
+  const seenLeads = loadSeenLeads();
 
-  const hotelsDb = loadHotelsDb();
-  const seen = loadSeenHotels();
-  const regionsToSearch = regionFilter ? [regionFilter] : SRI_LANKA_REGIONS;
+  console.log(`\n═════════════════════════════════════════════════════════════════`);
+  console.log(`🚀 SERANEX LANKA SOLUTIONS - AUTONOMOUS LEAD HUNTER`);
+  console.log(`Hotline: 07228382638 | Web: https://seranex.lk`);
+  console.log(`Target Industry: ${vertical.name}`);
+  console.log(`Regions: ${regionsToScan.join(", ")}`);
+  console.log(`═════════════════════════════════════════════════════════════════\n`);
 
   let discoveredCount = 0;
-  let emailsFoundCount = 0;
-  let emailsSentCount = 0;
 
-  const maxQuota = catConfig.maxPerLocation || (categoryKey === "5-star" ? 2 : 15);
+  for (const region of regionsToScan) {
+    console.log(`\n📍 Scanning Region: ${region}...`);
 
-  for (const queryTerm of catConfig.searchQueries) {
-    for (const region of regionsToSearch) {
-      // Check if quota for this category in this region is already filled
-      const existingInRegion = hotelsDb.filter(
-        (h) => h.region === region && h.star_category === categoryKey
-      ).length;
+    for (const queryPattern of vertical.searchKeywords.slice(0, 3)) {
+      const fullQuery = `${queryPattern} ${region}`;
+      console.log(`  🔎 Querying: "${fullQuery}"`);
 
-      if (existingInRegion >= maxQuota) {
-        if (categoryKey === "5-star") {
-          console.log(`  ⏹ 5-Star quota satisfied for ${region} (${existingInRegion}/${maxQuota} hotels).`);
-        }
-        continue;
-      }
-
-      const query = `${queryTerm} in ${region}, Sri Lanka`;
-      console.log(`🔍 Query: "${query}"`);
-
-      const results = await searchPlaces(query, apiKey);
+      const results = await searchPlaces(fullQuery, apiKey);
       await sleep(API_DELAY_MS);
 
-      for (const place of results) {
-        // Enforce quota before processing each place
-        const currentCount = hotelsDb.filter(
-          (h) => h.region === region && h.star_category === categoryKey
-        ).length;
-        if (currentCount >= maxQuota) {
-          console.log(`  ✅ Quota reached for ${catConfig.name} in ${region} (${currentCount}/${maxQuota}).`);
-          break;
-        }
+      for (const placeSummary of results) {
+        const placeId = placeSummary.place_id;
+        if (!placeId || seenLeads.has(placeId)) continue;
 
-        const placeId = place.place_id;
+        seenLeads.add(placeId);
+        saveSeenLeads(seenLeads);
 
-        // Skip if already in DB
-        if (seen.has(placeId)) continue;
-
-        // Pre-filter out budget homestays / hostels if searching 4 or 5 star
-        const filterCheck = quickFilter(place, categoryKey);
-        if (!filterCheck.valid) {
-          seen.add(placeId);
-          saveSeenHotels(seen);
-          continue;
-        }
-
-        // Fetch deep details
+        // Fetch detailed business info
         const details = await getPlaceDetails(placeId, apiKey);
         await sleep(API_DELAY_MS);
+
         if (!details) continue;
 
-        // Verify Star Rating classification strictly
-        const verification = await verifyStarRating(details, categoryKey, openRouterKey, openRouterModel);
-        if (!verification.verified) {
-          console.log(`  🚫 Skipped: "${details.name}" does not match ${catConfig.name} criteria.`);
-          seen.add(placeId);
-          saveSeenHotels(seen);
-          continue;
-        }
+        // Perform business digital audit
+        const audit = auditBusiness(details, verticalKey);
 
-        console.log(`\n✨ Matched Hotel: ${details.name} [${catConfig.name}]`);
-        console.log(`   📍 Address: ${details.formatted_address || "N/A"}`);
-        console.log(`   📞 Phone:   ${details.formatted_phone_number || "N/A"}`);
-        console.log(`   🌐 Website: ${details.website || "None"}`);
-
-        // Scrape official reservation & sales emails from website
-        let primaryEmail = null;
-        let allEmails = [];
-
-        if (details.website) {
-          console.log(`   🔎 Scraping website for reservation/sales emails...`);
-          const scrapeRes = await scrapeHotelEmails(details.website);
-          primaryEmail = scrapeRes.primaryEmail;
-          allEmails = scrapeRes.allEmails;
-
-          if (primaryEmail) {
-            console.log(`   ✉ Found Email: ${primaryEmail}`);
-            emailsFoundCount++;
-          } else {
-            console.log(`   ⚠ No email found on website`);
+        // If business has a website, scrape contact email
+        let scrapedEmail = null;
+        if (audit.website && audit.website_status === "has_website") {
+          try {
+            console.log(`    🌐 Inspecting website for contact email: ${audit.website}`);
+            const scrapeResult = await scrapeWebsiteEmails(audit.website);
+            scrapedEmail = scrapeResult.primaryEmail || null;
+            if (scrapedEmail) {
+              console.log(`    ✉ Found contact email: ${scrapedEmail}`);
+            }
+          } catch (e) {
+            // non-fatal
           }
         }
 
-        const newHotel = {
+        // Generate tailored AI pitch
+        console.log(`    ⚡ Generating bespoke AI Pitch for "${audit.name}"...`);
+        const pitch = await generateAIPitch(audit, openRouterKey, model);
+
+        const newLead = {
           place_id: placeId,
-          name: details.name,
-          star_category: categoryKey,
-          star_rating: catConfig.starRating,
-          region: region,
-          address: details.formatted_address || null,
-          phone: details.formatted_phone_number || null,
-          intl_phone: details.international_phone_number || null,
-          website: details.website || null,
-          rating: details.rating || null,
-          review_count: details.user_ratings_total || 0,
-          email: primaryEmail,
-          all_emails: allEmails,
+          name: audit.name,
+          vertical: verticalKey,
+          vertical_name: vertical.name,
+          address: audit.address,
+          region,
+          phone: audit.phone,
+          email: scrapedEmail,
+          website: audit.website,
+          website_status: audit.website_status,
+          rating: audit.rating,
+          review_count: audit.review_count,
+          opportunity_score: audit.opportunity_score,
+          recommended_service: audit.recommended_service,
+          service_details: audit.service_details,
+          detected_needs: audit.detected_needs,
+          email_subject: pitch.email_subject,
+          email_body: pitch.email_body,
+          whatsapp_pitch: pitch.whatsapp_pitch,
+          key_hook: pitch.key_hook,
           status: "DISCOVERED",
-          rate_sheets: [],
-          created_at: new Date().toISOString()
+          discovered_at: new Date().toISOString(),
+          outreach_history: []
         };
 
-        // Send rate sheet request if email exists and emailing is enabled
-        if (options.sendEmails && primaryEmail) {
-          console.log(`   🚀 Dispatching B2B Rate Sheet inquiry email...`);
-          const sendRes = await sendRateSheetInquiry(primaryEmail, {
-            name: details.name,
-            starCategory: catConfig.name,
-            place_id: placeId
-          });
-
-          if (sendRes.success) {
-            newHotel.status = "EMAIL_SENT";
-            newHotel.email_sent_at = new Date().toISOString();
-            emailsSentCount++;
-            notifyInquirySent(newHotel, primaryEmail).catch(() => {});
-            console.log(`   ⏳ Hostinger rate limit protection: waiting 20s before next email...`);
-            await sleep(20000);
+        // Automatic Outreach if requested
+        if (options.sendEmails && scrapedEmail && !options.dryRun) {
+          console.log(`    📨 Sending cold outreach email to ${scrapedEmail}...`);
+          const emailRes = await sendSeranixOutreachEmail(scrapedEmail, newLead, pitch);
+          if (emailRes.success) {
+            newLead.status = "EMAIL_SENT";
+            newLead.outreach_history.push({
+              channel: "Email",
+              target: scrapedEmail,
+              sent_at: new Date().toISOString()
+            });
+            await notifyOutreachDispatched(newLead, "Email");
           }
+          await sleep(20000); // 20s safe pacing
         }
 
-        hotelsDb.push(newHotel);
-        saveHotelsDb(hotelsDb);
+        if (options.sendWhatsApp && audit.phone && !options.dryRun) {
+          console.log(`    💬 Sending WhatsApp outreach to ${audit.phone}...`);
+          const waRes = await sendWhatsAppOutreach(audit.phone, pitch.whatsapp_pitch, audit.name);
+          if (waRes.success) {
+            newLead.status = "WHATSAPP_SENT";
+            newLead.outreach_history.push({
+              channel: "WhatsApp",
+              target: audit.phone,
+              sent_at: new Date().toISOString()
+            });
+            await notifyOutreachDispatched(newLead, "WhatsApp");
+          }
+          await sleep(25000); // 25s safe pacing
+        }
 
-        // Discord Notification for hotel discovery
-        notifyHotelDiscovered(newHotel).catch(() => {});
+        // Notify Discord
+        await notifyLeadDiscovered(newLead);
 
-        seen.add(placeId);
-        saveSeenHotels(seen);
+        // Save to DB
+        leads.unshift(newLead);
+        saveLeadsDb(leads);
         discoveredCount++;
+
+        console.log(`    ✅ Stored lead: ${audit.name} (Opportunity: ${audit.opportunity_score}/100)`);
       }
     }
   }
 
-  console.log(`\n────────────────────────────────────────────────────────`);
-  console.log(`✅ Scan finished for ${catConfig.name}!`);
-  console.log(`   Total Hotels Discovered: ${discoveredCount}`);
-  console.log(`   Emails Found:           ${emailsFoundCount}`);
-  console.log(`   Inquiry Emails Sent:    ${emailsSentCount}`);
-  console.log(`────────────────────────────────────────────────────────\n`);
-
-  return hotelsDb;
+  console.log(`\n🎉 Discovery scan complete! Added ${discoveredCount} new qualified business leads for Seranex Lanka Solutions.\n`);
+  return { success: true, count: discoveredCount };
 }
 
-// ─── MAIN RUNNER ──────────────────────────────────────────────────────────────
+// ─── CLI RUNNER ───────────────────────────────────────────────────────────────
 
-async function main() {
-  if (SYNC_INBOX_ONLY) {
-    console.log("📬 Running Inbox Sync to harvest rate sheet replies...");
-    await syncRateSheetsFromInbox();
-    return;
-  }
-
-  const categoriesToRun =
-    targetCategory === "all" ? ["4-star", "3-star", "5-star"] : [targetCategory];
-
-  for (const cat of categoriesToRun) {
-    await harvestHotelsForCategory(cat, targetRegion, {
-      sendEmails: SEND_EMAILS
-    });
-  }
-
-  // Check if we should sync inbox afterwards
-  if (!DRY_RUN && process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
-    console.log("\nChecking for any rate sheet replies in inbox...");
-    await syncRateSheetsFromInbox();
-  }
-}
-
-import { fileURLToPath } from "node:url";
-
-const isDirectRun = process.argv[1] && (
-  process.argv[1].endsWith("index.js") ||
-  fileURLToPath(import.meta.url) === process.argv[1]
-);
+const args = process.argv.slice(2);
+const isDirectRun = process.argv[1]?.endsWith("index.js");
 
 if (isDirectRun) {
-  main().catch((err) => {
-    console.error("✖ Fatal Error:", err);
+  const DRY_RUN = args.includes("--dry-run");
+  const SEND_EMAILS = !DRY_RUN && args.includes("--email");
+  const SEND_WHATSAPP = !DRY_RUN && args.includes("--whatsapp");
+
+  let catArg = args.find((a) => a.startsWith("--category="));
+  let category = catArg ? catArg.split("=")[1].toLowerCase() : "restaurants";
+
+  let regArg = args.find((a) => a.startsWith("--region="));
+  let region = regArg ? regArg.split("=")[1] : null;
+
+  discoverLeadsForCategory(category, region, {
+    dryRun: DRY_RUN,
+    sendEmails: SEND_EMAILS,
+    sendWhatsApp: SEND_WHATSAPP
+  }).catch((err) => {
+    console.error(`✖ Fatal Error: ${err.message}`);
     process.exit(1);
   });
 }

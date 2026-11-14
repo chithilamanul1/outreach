@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: "oceanway-rate-hunter",
+      name: "seranix-digital-engine",
       script: "dashboard.js",
       node_args: "--env-file=.env",
       instances: 1,

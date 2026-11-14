@@ -1,6 +1,6 @@
 @echo off
-cd /d "d:\desktop\Outreach"
-title Outreach & Automation Suite
+cd /d "%~dp0"
+title Seranix Digital - AI Outreach & Sales Agent Hub
 
-:: Start the Master Dashboard, IMAP Harvester & WhatsApp Delivery
+:: Start Seranix Digital Command Center & Autonomous Salesbot
 node --env-file=.env dashboard.js

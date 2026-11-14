@@ -1,22 +1,55 @@
 version: '3.8'
 
 services:
-  oceanway-rate-hunter:
+  seranix-digital-engine:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: oceanway-rate-hunter
-    restart: unless-stopped
+    container_name: seranix-digital-engine
+    restart: always
     ports:
       - "3000:3000"
-    env_file:
-      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+      - GOOGLE_PLACES_API_KEY=${GOOGLE_PLACES_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL:-google/gemini-2.5-flash}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - DISCORD_HOT_LEADS_WEBHOOK=${DISCORD_HOT_LEADS_WEBHOOK}
+      - ADMIN_WHATSAPP_NUMBER=${ADMIN_WHATSAPP_NUMBER:-947228382638}
+      - BOT_WHATSAPP_NUMBER=${BOT_WHATSAPP_NUMBER:-94760602638}
+      - WHATSAPP_AUTO_SEND=${WHATSAPP_AUTO_SEND:-true}
+      - AGENCY_NAME=Seranix Digital
+      - AGENCY_PHONE=07228382638
+      - AGENCY_WEBSITE=https://seranex.lk
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT:-465}
+      - SMTP_SECURE=${SMTP_SECURE:-true}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
     volumes:
-      # Persistent storage for downloaded rate sheets
-      - ./rate_sheets:/app/rate_sheets
-      # Persistent storage for WhatsApp session authentication
-      - ./.wwebjs_auth:/app/.wwebjs_auth
-      # Persistent databases
-      - ./hotels_db.json:/app/hotels_db.json
-      - ./master_costing_sheet.json:/app/master_costing_sheet.json
-      - ./seen_hotels.json:/app/seen_hotels.json
+      # Persistent storage for WhatsApp Web authentication session
+      - seranix_wwebjs_auth:/app/.wwebjs_auth
+      # Persistent JSON databases for leads and conversations
+      - ./leads_db.json:/app/leads_db.json
+      - ./seen_leads.json:/app/seen_leads.json
+      - ./wa_conversations.json:/app/wa_conversations.json
+      - ./wa_sent.json:/app/wa_sent.json
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+volumes:
+  seranix_wwebjs_auth:
+    name: seranix_wwebjs_auth
