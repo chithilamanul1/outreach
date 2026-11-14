@@ -11,7 +11,7 @@ import {
   loadSeenLeads,
   saveSeenLeads
 } from './index.js';
-import { sendSeranixOutreachEmail, getTransporter } from './email.js';
+import { sendSeranexOutreachEmail, getTransporter } from './email.js';
 import {
   initWhatsApp,
   getWhatsAppStatus,
@@ -122,7 +122,7 @@ app.get('/api/health', (req, res) => {
   const wa = getWhatsAppStatus();
   res.json({
     status: 'ok',
-    app: 'Seranix Digital Autonomous Engine',
+    app: 'Seranex Lanka Solutions Autonomous Engine',
     uptime: Math.round(process.uptime()),
     uptimeFormatted: `${Math.floor(process.uptime() / 3600)}h ${Math.floor((process.uptime() % 3600) / 60)}m`,
     totalLeads: leads.length,
@@ -311,7 +311,7 @@ app.post('/api/scan', async (req, res) => {
     running: true,
     vertical,
     region,
-    log: `Launching Seranix Lead Hunter for ${vertical} in ${region}...`,
+    log: `Launching Seranex Lead Hunter for ${vertical} in ${region}...`,
     count: 0
   };
 
@@ -392,7 +392,7 @@ app.post('/api/outreach/email/:id', async (req, res) => {
     if (!lead.email) return res.status(400).json({ error: 'No contact email registered for this business' });
 
     const customPitch = req.body.pitch || null;
-    const result = await sendSeranixOutreachEmail(lead.email, lead, customPitch);
+    const result = await sendSeranexOutreachEmail(lead.email, lead, customPitch);
 
     if (result.success) {
       lead.status = 'EMAIL_SENT';
@@ -509,7 +509,7 @@ app.post('/api/outreach/batch-email', async (req, res) => {
       const target = currentLeads.find(l => l.place_id === lead.place_id);
       if (!target || target.status === 'EMAIL_SENT') continue;
 
-      const result = await sendSeranixOutreachEmail(target.email, target);
+      const result = await sendSeranexOutreachEmail(target.email, target);
       if (result.success) {
         target.status = 'EMAIL_SENT';
         target.email_sent_at = new Date().toISOString();
@@ -551,7 +551,7 @@ app.post('/api/outreach/batch-whatsapp', async (req, res) => {
       const target = currentLeads.find(l => l.place_id === lead.place_id);
       if (!target || target.status === 'WHATSAPP_SENT') continue;
 
-      const pitch = target.whatsapp_pitch || `Hi from Seranix Digital! We build high-converting websites & custom software.`;
+      const pitch = target.whatsapp_pitch || `Hi from Seranex Lanka Solutions! We build high-converting websites, custom software, and video ads. Hotline: 07228382638.`;
       const result = await sendWhatsAppOutreach(target.phone, pitch, target.name);
 
       if (result.success) {
@@ -752,12 +752,12 @@ app.post('/api/settings/test-email', async (req, res) => {
     const { testEmail } = req.body;
     if (!testEmail) return res.status(400).json({ error: 'Test email is required' });
 
-    const result = await sendSeranixOutreachEmail(testEmail, {
+    const result = await sendSeranexOutreachEmail(testEmail, {
       name: 'Diagnostic Verification',
       vertical: 'services'
     }, {
-      email_subject: '✅ Seranix Digital SMTP Verification Test',
-      email_body: 'Congratulations! Your SMTP connection is properly configured and operational for Seranix Digital 24/7 client outreach.'
+      email_subject: '✅ Seranex Lanka Solutions Email Verification Test',
+      email_body: 'Congratulations! Your email connection is properly configured and operational for Seranex Lanka Solutions 24/7 client outreach.'
     });
 
     if (result.success) {
@@ -776,7 +776,7 @@ app.post('/api/settings/test-discord', async (req, res) => {
     if (!webhook) return res.status(400).json({ error: 'No Discord webhook URL configured' });
 
     const embed = {
-      title: '⚡ Seranix Digital Discord Webhook Connected',
+      title: '⚡ Seranex Lanka Solutions Discord Webhook Connected',
       description: 'Your real-time sales alert channel is operational. You will receive instant notifications for new leads, outreach dispatches, and 🔥 HOT LEADS!',
       color: 0x6366f1,
       timestamp: new Date().toISOString()

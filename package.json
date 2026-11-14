@@ -1,7 +1,7 @@
 {
-  "name": "seranix-digital-outreach-engine",
+  "name": "seranex-lanka-outreach-engine",
   "version": "3.5.0",
-  "description": "Seranix Digital - Autonomous AI B2B Lead Hunter & Sales Agent for Software, Websites & Video Ad Marketing",
+  "description": "Seranex Lanka Solutions - Autonomous AI B2B Lead Hunter & Sales Agent for Software, Websites & Video Ad Marketing",
   "type": "module",
   "scripts": {
     "start": "node --env-file=.env index.js",

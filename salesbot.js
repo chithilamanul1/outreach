@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// Seranix Digital - Autonomous AI Sales Agent & Deal Closer
+// Seranex Lanka Solutions - Autonomous AI Sales Agent & Deal Closer
 // ─────────────────────────────────────────────────────────────────────────────
 // Listens for inbound replies & missed calls on WhatsApp and Web, conducts
 // high-converting consultative sales conversations across Software, Websites & Video Ads,
@@ -50,7 +50,7 @@ function loadSentLeads() {
 
 // ─── ELITE REAL-WORLD SALES CLOSER SYSTEM PROMPT ─────────────────────────────
 
-const SERANIX_SALES_SYSTEM_PROMPT = `You are "Kasun", the Senior Client Solutions & Sales Director at "Seranix Digital" (https://seranex.lk).
+const SERANEX_SALES_SYSTEM_PROMPT = `You are "Kasun", the Senior Client Solutions & Sales Director at "Seranex Lanka Solutions" (https://seranex.lk).
 Direct Hotline: 07228382638 (+94 72 283 8268).
 
 You are talking directly to a prospective business owner on WhatsApp.
@@ -77,6 +77,7 @@ Company Services & Value Proposition:
 
 Rules for Closing Deals:
 - NEVER give passive, lazy one-line replies. Be engaged, consultative, and ask questions that diagnose their business problem.
+- Always identify yourself as "Kasun from Seranex Lanka Solutions" (never use Seranix).
 - Always guide the conversation toward a concrete next step: e.g. "Would you like me to share our live client portfolio (https://seranex.lk), or should we hop on a quick 5-minute call on our hotline 07228382638 to discuss your exact features?"
 - If they ask for portfolio/work: Reference our live portfolio at https://seranex.lk and output tag [ACTION:SEND_PORTFOLIO].
 - If they ask about price: Be transparent. State our starting price ($100 / Rs. 28,000 for websites) and explain the high ROI.
@@ -108,7 +109,7 @@ export async function getAIReply(conversationHistory, businessName, businessIndu
   const model = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
 
   const messages = [
-    { role: "system", content: SERANIX_SALES_SYSTEM_PROMPT },
+    { role: "system", content: SERANEX_SALES_SYSTEM_PROMPT },
     {
       role: "user",
       content: `Context: You are chatting on WhatsApp with "${businessName || "a prospective client"}" (${businessIndustry}). Here is the conversation history:`,
@@ -123,7 +124,7 @@ export async function getAIReply(conversationHistory, businessName, businessIndu
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
         "HTTP-Referer": "https://seranex.lk",
-        "X-Title": "Seranix Digital AI Sales Closer",
+        "X-Title": "Seranex Lanka Solutions AI Sales Closer",
       },
       body: JSON.stringify({
         model,
@@ -184,9 +185,9 @@ export async function handleIncomingCall(call, client) {
 
     let businessName = sentLeads[phoneClean]?.businessName || "Valued Caller";
 
-    const missedCallMessage = `Hello! We noticed we just missed your WhatsApp call to Seranix Digital. 📞
+    const missedCallMessage = `Hello! We noticed we just missed your WhatsApp call to Seranex Lanka Solutions. 📞
 
-I'm Kasun, Senior Client Solutions Director at Seranix Digital (https://seranex.lk). Our team was on another client consultation call.
+I'm Kasun, Senior Client Solutions Director at Seranex Lanka Solutions (https://seranex.lk). Our team was on another client consultation call.
 
 How can we help your business today?
 1️⃣ Custom Software / Web & Mobile Apps (Booking, POS, CRM, ERP, Automation)
@@ -229,7 +230,7 @@ Let me know what you need, or feel free to call our direct hotline directly at 0
       phoneClean,
       businessName,
       "HOT",
-      [{ role: "user", content: `📞 Client placed a phone call to Seranix WhatsApp!` }]
+      [{ role: "user", content: `📞 Client placed a phone call to Seranex WhatsApp!` }]
     );
 
     const adminPhone = process.env.ADMIN_WHATSAPP_NUMBER || AGENCY_PROFILE.adminWhatsApp;
@@ -254,7 +255,7 @@ export function attachSalesBotListeners(clients) {
   const sentLeads = loadSentLeads();
 
   console.log("═".repeat(65));
-  console.log("  🤖 Seranix Digital Autonomous AI Sales Closer Active");
+  console.log("  🤖 Seranex Lanka Solutions Autonomous AI Sales Closer Active");
   console.log("  Hotline: 07228382638 | Web: https://seranex.lk");
   console.log("  Listening for messages, missed calls & closing deals...");
   console.log("═".repeat(65));
@@ -372,7 +373,7 @@ export function attachSalesBotListeners(clients) {
             try {
               const adminPhone = process.env.ADMIN_WHATSAPP_NUMBER || AGENCY_PROFILE.adminWhatsApp;
               const cleanAdmin = adminPhone.replace(/[^0-9]/g, "");
-              const alertMsg = `🚨 *SERANIX DIGITAL - HOT CLIENT READY TO CLOSE!*\n\nBusiness: *${conversations[rawPhone].businessName}*\nPhone: +${phoneClean}\nClient Message: "${incomingText}"\n\n🎯 *Call them right away at 07228382638 to lock in the deal!*`;
+              const alertMsg = `🚨 *SERANEX LANKA SOLUTIONS - HOT CLIENT READY TO CLOSE!*\n\nBusiness: *${conversations[rawPhone].businessName}*\nPhone: +${phoneClean}\nClient Message: "${incomingText}"\n\n🎯 *Call them right away at 07228382638 to lock in the deal!*`;
               await client.sendMessage(`${cleanAdmin}@c.us`, alertMsg);
               console.log(`  📱 Sent instant WhatsApp Hot Lead alert to Admin (${adminPhone})`);
             } catch (alertErr) {

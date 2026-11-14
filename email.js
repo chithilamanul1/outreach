@@ -69,7 +69,7 @@ export function getTransporter() {
 /**
  * Build rich HTML email template branded for Seranex Lanka Solutions
  */
-export function generateSeranixHtmlEmail(lead, pitch) {
+export function generateSeranexHtmlEmail(lead, pitch) {
   const agencyName = AGENCY_PROFILE.name;
   const website = AGENCY_PROFILE.website;
   const phone = AGENCY_PROFILE.hotline;
@@ -174,7 +174,7 @@ export function generateSeranixHtmlEmail(lead, pitch) {
 /**
  * Send personalized B2B outreach email to a prospect business (supports Resend API & SMTP)
  */
-export async function sendSeranixOutreachEmail(recipientEmail, lead, customPitch = null) {
+export async function sendSeranexOutreachEmail(recipientEmail, lead, customPitch = null) {
   const provider = getEmailProvider();
   if (!provider) {
     console.warn("  ⚠ Email provider not configured (Requires RESEND_API_KEY or SMTP credentials).");
@@ -186,7 +186,7 @@ export async function sendSeranixOutreachEmail(recipientEmail, lead, customPitch
     email_body: lead.email_body || lead.message || "Hello! We would love to collaborate."
   };
 
-  const htmlContent = generateSeranixHtmlEmail(lead, pitch);
+  const htmlContent = generateSeranexHtmlEmail(lead, pitch);
   const senderFormatted = `"Seranex Lanka Solutions" <${provider.fromEmail}>`;
 
   // 1. Resend API Dispatch
@@ -240,3 +240,7 @@ export async function sendSeranixOutreachEmail(recipientEmail, lead, customPitch
     return { success: false, reason: err.message };
   }
 }
+
+// Backwards-compatible aliases
+export const generateSeranixHtmlEmail = generateSeranexHtmlEmail;
+export const sendSeranixOutreachEmail = sendSeranexOutreachEmail;

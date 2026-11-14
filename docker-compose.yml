@@ -1,11 +1,11 @@
 version: '3.8'
 
 services:
-  seranix-digital-engine:
+  seranex-lanka-engine:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: seranix-digital-engine
+    container_name: seranex-lanka-engine
     restart: always
     ports:
       - "3000:3000"
@@ -22,9 +22,11 @@ services:
       - ADMIN_WHATSAPP_NUMBER=${ADMIN_WHATSAPP_NUMBER:-947228382638}
       - BOT_WHATSAPP_NUMBER=${BOT_WHATSAPP_NUMBER:-94760602638}
       - WHATSAPP_AUTO_SEND=${WHATSAPP_AUTO_SEND:-true}
-      - AGENCY_NAME=Seranix Digital
+      - AGENCY_NAME=Seranex Lanka Solutions
       - AGENCY_PHONE=07228382638
       - AGENCY_WEBSITE=https://seranex.lk
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM:-info@seranex.lk}
       - SMTP_HOST=${SMTP_HOST}
       - SMTP_PORT=${SMTP_PORT:-465}
       - SMTP_SECURE=${SMTP_SECURE:-true}
@@ -32,7 +34,7 @@ services:
       - SMTP_PASS=${SMTP_PASS}
     volumes:
       # Persistent storage for WhatsApp Web authentication session
-      - seranix_wwebjs_auth:/app/.wwebjs_auth
+      - seranex_wwebjs_auth:/app/.wwebjs_auth
       # Persistent JSON databases for leads and conversations
       - ./leads_db.json:/app/leads_db.json
       - ./seen_leads.json:/app/seen_leads.json
@@ -51,5 +53,5 @@ services:
         max-file: "3"
 
 volumes:
-  seranix_wwebjs_auth:
-    name: seranix_wwebjs_auth
+  seranex_wwebjs_auth:
+    name: seranex_wwebjs_auth

@@ -1,6 +1,6 @@
 import { AGENCY_PROFILE, BUSINESS_VERTICALS, TARGET_REGIONS, CORE_SERVICES } from "./config/businessCategories.js";
 import { auditBusiness, generateFallbackPitch } from "./classifier.js";
-import { generateSeranixHtmlEmail } from "./email.js";
+import { generateSeranexHtmlEmail } from "./email.js";
 import { cleanPhoneNumber, formatPhoneForWhatsApp } from "./whatsapp.js";
 import { parseAIResponse } from "./salesbot.js";
 
@@ -47,7 +47,7 @@ console.log(`   ✔ Sample Pitch Snippet: "${pitch.whatsapp_pitch.slice(0, 110)}
 
 // 4. Test HTML Email Generation
 console.log(`\n4. Testing Seranex Branded HTML Email Template:`);
-const html = generateSeranixHtmlEmail(mockRestaurant, pitch);
+const html = generateSeranexHtmlEmail(mockRestaurant, pitch);
 if (html.includes("SERANEX") && html.includes("seranex.lk")) {
   console.log(`   ✅ HTML Email Template generated cleanly (${html.length} bytes)!`);
 } else {

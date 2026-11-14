@@ -14,7 +14,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { AGENCY_PROFILE, BUSINESS_VERTICALS, TARGET_REGIONS, CORE_SERVICES } from "./config/businessCategories.js";
 import { auditBusiness, generateAIPitch } from "./classifier.js";
 import { scrapeWebsiteEmails } from "./email_scraper.js";
-import { sendSeranixOutreachEmail } from "./email.js";
+import { sendSeranexOutreachEmail } from "./email.js";
 import { sendWhatsAppOutreach } from "./whatsapp.js";
 import { notifyLeadDiscovered, notifyOutreachDispatched } from "./discord_notifier.js";
 
@@ -193,7 +193,7 @@ export async function discoverLeadsForCategory(verticalKey = "restaurants", targ
         // Automatic Outreach if requested
         if (options.sendEmails && scrapedEmail && !options.dryRun) {
           console.log(`    📨 Sending cold outreach email to ${scrapedEmail}...`);
-          const emailRes = await sendSeranixOutreachEmail(scrapedEmail, newLead, pitch);
+          const emailRes = await sendSeranexOutreachEmail(scrapedEmail, newLead, pitch);
           if (emailRes.success) {
             newLead.status = "EMAIL_SENT";
             newLead.outreach_history.push({

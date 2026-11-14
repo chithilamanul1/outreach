@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: "seranix-digital-engine",
+      name: "seranex-lanka-engine",
       script: "dashboard.js",
       node_args: "--env-file=.env",
       instances: 1,
