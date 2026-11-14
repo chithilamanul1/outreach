@@ -16,6 +16,7 @@ import {
   initWhatsApp,
   getWhatsAppStatus,
   requestWhatsAppPairingCode,
+  resetWhatsAppSession,
   sendWhatsAppOutreach,
   sendMissedCallOutreach
 } from './whatsapp.js';
@@ -804,9 +805,39 @@ app.get('/api/whatsapp/status', (req, res) => {
   res.json(getWhatsAppStatus());
 });
 
+app.get('/api/whatsapp/qr', (req, res) => {
+  const status = getWhatsAppStatus();
+  if (status.isReady) {
+    return res.json({ status: 'connected', isReady: true });
+  }
+  if (status.hasQr && status.qrDataUrl) {
+    return res.json({
+      status: 'qr_ready',
+      isReady: false,
+      hasQr: true,
+      qrDataUrl: status.qrDataUrl
+    });
+  }
+  return res.json({
+    status: 'initializing',
+    isReady: false,
+    hasQr: false,
+    message: 'Generating live WhatsApp QR code...'
+  });
+});
+
+app.post('/api/whatsapp/reset', async (req, res) => {
+  try {
+    await resetWhatsAppSession();
+    res.json({ success: true, message: 'WhatsApp session reset. Generating fresh QR code...' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/whatsapp/pairing-code', async (req, res) => {
   try {
-    const phone = req.body?.phone || process.env.BOT_WHATSAPP_NUMBER || '94760602638';
+    const phone = req.body?.phone || process.env.BOT_WHATSAPP_NUMBER || '07228382638';
     const pairingCode = await requestWhatsAppPairingCode(phone);
     res.json({ success: true, phone, pairingCode });
   } catch (err) {

@@ -8,7 +8,8 @@
 import pkg from "whatsapp-web.js";
 const { Client, LocalAuth, MessageMedia } = pkg;
 import qrcode from "qrcode-terminal";
-import { existsSync, writeFileSync, readFileSync } from "node:fs";
+import QRCode from "qrcode";
+import { existsSync, writeFileSync, readFileSync, unlinkSync } from "node:fs";
 import { AGENCY_PROFILE } from "./config/businessCategories.js";
 import { attachSalesBotListeners } from "./salesbot.js";
 
@@ -16,6 +17,7 @@ let waClient = null;
 let isReady = false;
 let initPromise = null;
 let currentQr = null;
+let currentQrDataUrl = null;
 
 const WA_SENT_PATH = "wa_sent.json";
 
@@ -46,7 +48,8 @@ export function getWhatsAppStatus() {
     isReady,
     hasClient: Boolean(waClient),
     hasQr: Boolean(currentQr),
-    qr: currentQr
+    qr: currentQr,
+    qrDataUrl: currentQrDataUrl
   };
 }
 
@@ -77,16 +80,50 @@ export async function requestWhatsAppPairingCode(phone) {
   if (!waClient) {
     await initWhatsApp();
   }
-  const target = phone || process.env.BOT_WHATSAPP_NUMBER || "94760602638";
+  const target = phone || process.env.BOT_WHATSAPP_NUMBER || "07228382638";
   const cleanPhone = cleanPhoneNumber(target);
   if (!cleanPhone) throw new Error("No valid phone number provided for pairing");
 
   if (waClient && typeof waClient.requestPairingCode === "function") {
-    const code = await waClient.requestPairingCode(cleanPhone);
-    console.log(`\n🔑 WHATSAPP PAIRING CODE FOR SERANEX LANKA SOLUTIONS (${cleanPhone}): ${code}\n`);
-    return code;
+    try {
+      const code = await waClient.requestPairingCode(cleanPhone);
+      console.log(`\n🔑 WHATSAPP PAIRING CODE FOR SERANEX LANKA SOLUTIONS (${cleanPhone}): ${code}\n`);
+      return code;
+    } catch (pairErr) {
+      console.warn(`  ⚠ WhatsApp Pairing Code error: ${pairErr.message}`);
+      throw new Error("WhatsApp Web currently requires scanning the QR Code on screen to link your device.");
+    }
   }
-  throw new Error("WhatsApp client is not ready or pairing code is not supported");
+  throw new Error("WhatsApp client is not ready. Please scan the QR Code on screen.");
+}
+
+/**
+ * Reset WhatsApp session cleanly and generate a fresh live QR code
+ */
+export async function resetWhatsAppSession() {
+  console.log("\n🔄 Force resetting WhatsApp session for clean connection...");
+  isReady = false;
+  currentQr = null;
+  currentQrDataUrl = null;
+  initPromise = null;
+
+  if (waClient) {
+    try {
+      await waClient.destroy();
+    } catch (_) {}
+    waClient = null;
+  }
+
+  // Remove old lockfile if present
+  try {
+    const lockPath = "./.wwebjs_auth/session-seranex-sales/lockfile";
+    if (existsSync(lockPath)) {
+      unlinkSync(lockPath);
+    }
+  } catch (_) {}
+
+  await new Promise(r => setTimeout(r, 1500));
+  return await initWhatsApp();
 }
 
 /**
@@ -129,60 +166,28 @@ export async function initWhatsApp() {
 
     waClient.on("qr", async (qr) => {
       currentQr = qr;
+      try {
+        currentQrDataUrl = await QRCode.toDataURL(qr, {
+          margin: 2,
+          scale: 8,
+          color: { dark: "#0f172a", light: "#ffffff" }
+        });
+        const base64Data = currentQrDataUrl.replace(/^data:image\/png;base64,/, "");
+        writeFileSync("public/whatsapp_qr.png", Buffer.from(base64Data, "base64"));
+      } catch (err) {
+        console.warn("  ⚠ QR render error:", err.message);
+      }
+
       console.log("\n📲 Scan this QR code with WhatsApp to connect Seranex Lanka Solutions Outreach:\n");
       qrcode.generate(qr, { small: true });
       console.log("   Open WhatsApp -> Linked Devices -> Link a Device.\n");
-
-      try {
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(qr)}`;
-        const res = await fetch(qrUrl);
-        if (res.ok) {
-          const buffer = Buffer.from(await res.arrayBuffer());
-          writeFileSync("public/whatsapp_qr.png", buffer);
-          writeFileSync("public/whatsapp_qr.html", `<!DOCTYPE html>
-<html>
-<head>
-  <title>Connect WhatsApp - Seranex Lanka Solutions</title>
-  <meta charset="utf-8">
-  <meta http-equiv="refresh" content="15">
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #090d16; color: #e2e8f0; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-    .card { background: #11192e; padding: 36px 44px; border-radius: 16px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #263554; max-width: 420px; }
-    h2 { color: #818cf8; margin-top: 0; font-size: 22px; }
-    p { color: #94a3b8; font-size: 14px; line-height: 1.5; }
-    .qr-box { background: white; padding: 14px; border-radius: 12px; display: inline-block; margin: 18px 0; }
-    img { width: 280px; height: 280px; display: block; }
-    .steps { text-align: left; background: #070b14; padding: 16px 20px; border-radius: 10px; margin-top: 14px; font-size: 13px; color: #cbd5e1; }
-    .steps ol { margin: 0; padding-left: 20px; }
-    .steps li { margin-bottom: 6px; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h2>📱 Connect Seranex Lanka WhatsApp</h2>
-    <p>Scan with WhatsApp to enable autonomous outreach, missed-call handling & AI sales agent conversations.</p>
-    <div class="qr-box">
-      <img src="whatsapp_qr.png?t=${Date.now()}" alt="WhatsApp QR Code" />
-    </div>
-    <div class="steps">
-      <ol>
-        <li>Open WhatsApp on phone</li>
-        <li>Tap <b>Menu (⋮)</b> or <b>Settings</b> &gt; <b>Linked Devices</b></li>
-        <li>Tap <b>Link a Device</b> and point camera at QR code</li>
-      </ol>
-    </div>
-    <p style="font-size: 12px; color: #64748b; margin-top: 16px;">This page refreshes automatically until connected.</p>
-  </div>
-</body>
-</html>`);
-        }
-      } catch (_) {}
     });
 
     waClient.on("ready", async () => {
       console.log("✅ WhatsApp Client connected and ready for Seranex Lanka Solutions!\n");
       isReady = true;
       currentQr = null;
+      currentQrDataUrl = null;
 
       try {
         if (waClient.pupPage) {
@@ -215,20 +220,43 @@ export async function initWhatsApp() {
 
     waClient.on("authenticated", () => {
       console.log("🔐 WhatsApp authenticated successfully.");
+      currentQr = null;
+      currentQrDataUrl = null;
     });
 
-    waClient.on("auth_failure", (msg) => {
+    waClient.on("auth_failure", async (msg) => {
       console.error("✖ WhatsApp auth failed:", msg);
+      isReady = false;
+      currentQr = null;
+      currentQrDataUrl = null;
+      initPromise = null;
+      try {
+        await waClient.destroy();
+      } catch (_) {}
+      waClient = null;
       resolve(null);
     });
 
-    waClient.on("disconnected", (reason) => {
+    waClient.on("disconnected", async (reason) => {
       console.warn("⚠ WhatsApp disconnected:", reason);
       isReady = false;
+      currentQr = null;
+      currentQrDataUrl = null;
+      initPromise = null;
+      try {
+        await waClient.destroy();
+      } catch (_) {}
+      waClient = null;
+
+      console.log("🔄 Auto re-initializing WhatsApp client in 4 seconds...");
+      setTimeout(() => {
+        initWhatsApp().catch(e => console.warn("  ⚠ Re-init error:", e.message));
+      }, 4000);
     });
 
     waClient.initialize().catch((err) => {
       console.error("✖ WhatsApp init error:", err.message);
+      initPromise = null;
       resolve(null);
     });
   });

@@ -585,37 +585,65 @@
     </div>
   </div>
 
-  <!-- ══ MODAL: WHATSAPP LINK & PAIRING CODE ═════════════════════════════════ -->
+  <!-- ══ MODAL: WHATSAPP LINK & LIVE QR ═════════════════════════════════════════ -->
   <div id="wa-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="glass-card rounded-2xl w-full max-w-md p-6 border border-surface-600 shadow-2xl text-center space-y-4">
       <div class="flex items-center justify-between border-b border-surface-700/60 pb-3">
         <h3 class="text-base font-bold text-white flex items-center gap-2">
           <i class="fa-brands fa-whatsapp text-emerald-400"></i> Link WhatsApp Account
         </h3>
-        <button onclick="closeModal('wa-modal')" class="text-slate-400 hover:text-white">
+        <button onclick="closeWhatsAppModal()" class="text-slate-400 hover:text-white">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <p class="text-xs text-slate-400">
-        Scan this QR code with WhatsApp, or generate an 8-digit Pairing Code.
-      </p>
-
-      <div class="bg-white p-3 rounded-2xl inline-block shadow-inner mx-auto">
-        <img id="wa-qr-img" src="/whatsapp_qr.png" alt="WhatsApp QR Code" class="w-56 h-56 mx-auto object-contain">
+      <!-- Live Status Pill -->
+      <div id="wa-qr-status" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+        <i class="fa-solid fa-circle-notch fa-spin text-xs"></i> Generating Fresh Live QR...
       </div>
 
+      <!-- QR Display Container -->
+      <div class="bg-white p-3 rounded-2xl inline-block shadow-inner mx-auto relative min-w-[240px] min-h-[240px] flex items-center justify-center">
+        <div id="wa-qr-placeholder" class="py-12 px-4 text-center">
+          <i class="fa-solid fa-circle-notch fa-spin text-3xl text-brand-500 mb-2 block"></i>
+          <span class="text-xs text-slate-500 font-medium">Initializing WhatsApp Client...</span>
+        </div>
+        <img id="wa-qr-img" src="" alt="WhatsApp QR Code" class="w-56 h-56 mx-auto object-contain hidden">
+        <div id="wa-qr-success" class="py-10 px-4 text-center hidden">
+          <i class="fa-solid fa-circle-check text-5xl text-emerald-500 mb-3 block"></i>
+          <div class="text-sm font-bold text-slate-900">WhatsApp Connected!</div>
+          <p class="text-xs text-slate-600 mt-1">Autonomous salesbot & outreach engine is now active.</p>
+        </div>
+      </div>
+
+      <!-- Instructions -->
       <div class="bg-surface-850 p-3 rounded-xl border border-surface-700 text-xs text-slate-300 text-left space-y-1">
-        <div>1. Open WhatsApp &gt; <b>Linked Devices</b></div>
-        <div>2. Tap <b>Link a Device</b> & scan QR</div>
+        <div>1. Open <b>WhatsApp</b> on your phone</div>
+        <div>2. Tap <b>Settings (or ⋮ Menu) &gt; Linked Devices</b></div>
+        <div>3. Tap <b>Link a Device</b> & scan the live QR above</div>
       </div>
 
-      <div class="pt-2 flex items-center justify-center gap-3">
-        <button onclick="fetchPairingCode()" id="btn-pairing-code" class="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600/30 transition">
-          <i class="fa-solid fa-key mr-1"></i> Get 8-Digit Pairing Code
+      <!-- Pairing Code Alternative -->
+      <div class="border-t border-surface-700/60 pt-3 space-y-2">
+        <div class="text-[11px] text-slate-400">Or link with phone number:</div>
+        <div class="flex items-center gap-2 justify-center">
+          <input type="text" id="wa-pair-phone" placeholder="07228382638" value="07228382638" class="bg-surface-900 border border-surface-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 w-36 text-center">
+          <button onclick="fetchPairingCode()" id="btn-pairing-code" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600/30 transition">
+            <i class="fa-solid fa-key mr-1"></i> Get Code
+          </button>
+        </div>
+        <div id="pairing-code-display" class="text-xl font-mono font-bold text-emerald-400 tracking-widest hidden mt-1"></div>
+      </div>
+
+      <!-- Reset & Refresh Actions -->
+      <div class="flex items-center justify-center gap-2 pt-1 border-t border-surface-700/40">
+        <button onclick="pollWhatsAppLive()" class="px-3 py-1.5 rounded-lg text-[11px] text-slate-400 hover:text-slate-200 hover:bg-surface-800 transition">
+          <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh QR
+        </button>
+        <button onclick="resetWhatsAppSessionUI()" id="btn-reset-wa" class="px-3 py-1.5 rounded-lg text-[11px] text-rose-400/80 hover:text-rose-300 hover:bg-rose-500/10 transition">
+          <i class="fa-solid fa-power-off mr-1"></i> Reset Connection
         </button>
       </div>
-      <div id="pairing-code-display" class="text-xl font-mono font-bold text-emerald-400 tracking-widest hidden"></div>
     </div>
   </div>
 
@@ -1028,24 +1056,102 @@
       } catch (_) {}
     }
 
+    let waPollInterval = null;
+
+    async function pollWhatsAppLive() {
+      try {
+        const res = await fetch('/api/whatsapp/qr');
+        const data = await res.json();
+        const statusPill = document.getElementById('wa-qr-status');
+        const qrImg = document.getElementById('wa-qr-img');
+        const qrPlaceholder = document.getElementById('wa-qr-placeholder');
+        const qrSuccess = document.getElementById('wa-qr-success');
+
+        if (data.status === 'connected') {
+          if (statusPill) {
+            statusPill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
+            statusPill.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Connected & Ready';
+          }
+          if (qrImg) qrImg.classList.add('hidden');
+          if (qrPlaceholder) qrPlaceholder.classList.add('hidden');
+          if (qrSuccess) qrSuccess.classList.remove('hidden');
+
+          const btn = document.getElementById('btn-wa-status');
+          const txt = document.getElementById('wa-status-text');
+          if (txt) txt.innerText = 'WhatsApp: Connected';
+          if (btn) btn.className = 'px-3.5 py-2.5 rounded-xl font-semibold text-xs flex items-center gap-1.5 border bg-emerald-500/10 text-emerald-400 border-emerald-500/25';
+
+          setTimeout(() => {
+            closeWhatsAppModal();
+          }, 2000);
+          return;
+        }
+
+        if (data.status === 'qr_ready' && data.qrDataUrl) {
+          if (statusPill) {
+            statusPill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
+            statusPill.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live QR Active • Scan with Phone';
+          }
+          if (qrSuccess) qrSuccess.classList.add('hidden');
+          if (qrPlaceholder) qrPlaceholder.classList.add('hidden');
+          if (qrImg) {
+            qrImg.src = data.qrDataUrl;
+            qrImg.classList.remove('hidden');
+          }
+          return;
+        }
+
+        // Initializing state
+        if (statusPill) {
+          statusPill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30';
+          statusPill.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-xs"></i> Generating Fresh Live QR...';
+        }
+        if (qrSuccess) qrSuccess.classList.add('hidden');
+        if (qrImg) qrImg.classList.add('hidden');
+        if (qrPlaceholder) qrPlaceholder.classList.remove('hidden');
+      } catch (err) {
+        console.warn('QR poll error:', err);
+      }
+    }
+
+    async function resetWhatsAppSessionUI() {
+      const btn = document.getElementById('btn-reset-wa');
+      if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Resetting...';
+      try {
+        const res = await fetch('/api/whatsapp/reset', { method: 'POST' });
+        const d = await res.json();
+        if (btn) btn.innerHTML = '<i class="fa-solid fa-power-off mr-1"></i> Reset Connection';
+        pollWhatsAppLive();
+      } catch (e) {
+        alert(e.message);
+        if (btn) btn.innerHTML = '<i class="fa-solid fa-power-off mr-1"></i> Reset Connection';
+      }
+    }
+
     async function fetchPairingCode() {
       const btn = document.getElementById('btn-pairing-code');
+      const phoneInput = document.getElementById('wa-pair-phone');
+      const phone = phoneInput ? phoneInput.value.trim() : '';
       btn.innerText = 'Requesting...';
       try {
-        const res = await fetch('/api/whatsapp/pairing-code', { method: 'POST' });
+        const res = await fetch('/api/whatsapp/pairing-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone })
+        });
         const d = await res.json();
         if (d.pairingCode) {
           const display = document.getElementById('pairing-code-display');
           display.innerText = d.pairingCode;
           display.classList.remove('hidden');
-          btn.innerText = 'New Code Ready';
+          btn.innerText = 'Code Received!';
         } else {
-          alert(d.error || 'Pairing code failed');
-          btn.innerText = 'Retry';
+          alert(d.error || 'Pairing code temporarily unavailable on WhatsApp Web. Please scan the Live QR Code directly on screen.');
+          btn.innerText = 'Scan QR Above';
         }
       } catch (e) {
-        alert(e.message);
-        btn.innerText = 'Retry';
+        alert(e.message || 'Please scan the Live QR Code directly on screen.');
+        btn.innerText = 'Scan QR Above';
       }
     }
 
@@ -1215,8 +1321,18 @@
 
     function openScanModal() { openModal('scan-modal'); }
     function openWhatsAppModal() {
-      document.getElementById('wa-qr-img').src = `/whatsapp_qr.png?t=${Date.now()}`;
       openModal('wa-modal');
+      pollWhatsAppLive();
+      if (waPollInterval) clearInterval(waPollInterval);
+      waPollInterval = setInterval(pollWhatsAppLive, 2500);
+    }
+
+    function closeWhatsAppModal() {
+      closeModal('wa-modal');
+      if (waPollInterval) {
+        clearInterval(waPollInterval);
+        waPollInterval = null;
+      }
     }
 
     function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
