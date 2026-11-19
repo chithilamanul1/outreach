@@ -19,7 +19,7 @@ console.log(`\n2. Testing Intelligent Business Audit:`);
 const mockRestaurant = {
   name: "Negombo Seafood Bistro & Cafe",
   formatted_address: "Lewis Place, Negombo, Sri Lanka",
-  formatted_phone_number: "072 283 8268",
+  formatted_phone_number: "072 838 2638",
   website: null,
   rating: 4.8,
   user_ratings_total: 210
@@ -56,11 +56,11 @@ if (html.includes("SERANEX") && html.includes("seranex.lk")) {
 
 // 5. Test Phone Sanitization
 console.log(`\n5. Testing WhatsApp Phone Formatting:`);
-const rawPhone = "07228382638";
+const rawPhone = "0728382638";
 const clean = cleanPhoneNumber(rawPhone);
 const waChatId = formatPhoneForWhatsApp(rawPhone);
 console.log(`   ✔ Raw: "${rawPhone}" -> Cleaned: "${clean}" -> WhatsApp ChatID: "${waChatId}"`);
-if (waChatId === "947228382638@c.us") {
+if (waChatId === "94728382638@c.us") {
   console.log("   ✅ Phone sanitization passed!");
 } else {
   console.error("   ❌ Phone sanitization failed!");

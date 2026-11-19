@@ -51,7 +51,7 @@ function loadSentLeads() {
 // ─── ELITE REAL-WORLD SALES CLOSER SYSTEM PROMPT ─────────────────────────────
 
 const SERANEX_SALES_SYSTEM_PROMPT = `You are "Kasun", the Senior Client Solutions & Sales Director at "Seranex Lanka Solutions" (https://seranex.lk).
-Direct Hotline: 07228382638 (+94 72 283 8268).
+Direct Hotline: 0728382638 (+94 72 838 2638).
 
 You are talking directly to a prospective business owner on WhatsApp.
 YOUR SOLE OBJECTIVE IS TO CLOSE SALES AND CONVERT LEADS INTO PAYING CLIENTS.
@@ -78,7 +78,7 @@ Company Services & Value Proposition:
 Rules for Closing Deals:
 - NEVER give passive, lazy one-line replies. Be engaged, consultative, and ask questions that diagnose their business problem.
 - Always identify yourself as "Kasun from Seranex Lanka Solutions" (never use Seranix).
-- Always guide the conversation toward a concrete next step: e.g. "Would you like me to share our live client portfolio (https://seranex.lk), or should we hop on a quick 5-minute call on our hotline 07228382638 to discuss your exact features?"
+- Always guide the conversation toward a concrete next step: e.g. "Would you like me to share our live client portfolio (https://seranex.lk), or should we hop on a quick 5-minute call on our hotline 0728382638 to discuss your exact features?"
 - If they ask for portfolio/work: Reference our live portfolio at https://seranex.lk and output tag [ACTION:SEND_PORTFOLIO].
 - If they ask about price: Be transparent. State our starting price ($100 / Rs. 28,000 for websites) and explain the high ROI.
 - If they negotiate or hesitate: Offer an immediate closing incentive (e.g. "If we finalize today, I can do Rs. 24,000 / $85 including 1-year free domain and hosting, and throw in free Google Maps SEO setup!").
@@ -194,7 +194,7 @@ How can we help your business today?
 2️⃣ High-Converting Websites (1-2 days launch, includes domain & hosting for 1 year)
 3️⃣ Cinematic 4K Video Ads & Digital Marketing (TikTok/Instagram Reels, Meta & Google Ads)
 
-Let me know what you need, or feel free to call our direct hotline directly at 07228382638! 🚀`;
+Let me know what you need, or feel free to call our direct hotline directly at 0728382638! 🚀`;
 
     await sleep(2000);
     await client.sendMessage(rawPhone, missedCallMessage);
@@ -236,7 +236,7 @@ Let me know what you need, or feel free to call our direct hotline directly at 0
     const adminPhone = process.env.ADMIN_WHATSAPP_NUMBER || AGENCY_PROFILE.adminWhatsApp;
     if (adminPhone) {
       const cleanAdmin = adminPhone.replace(/[^0-9]/g, "");
-      const adminAlert = `🚨 *URGENT: INCOMING CALL FROM PROSPECT!* 📞\n\nBusiness: *${businessName}*\nPhone: +${phoneClean}\n\nOur AI Sales Closer immediately texted them. Please call them back at *07228382638* to close this sale!`;
+      const adminAlert = `🚨 *URGENT: INCOMING CALL FROM PROSPECT!* 📞\n\nBusiness: *${businessName}*\nPhone: +${phoneClean}\n\nOur AI Sales Closer immediately texted them. Please call them back at *0728382638* to close this sale!`;
       await client.sendMessage(`${cleanAdmin}@c.us`, adminAlert).catch(() => {});
     }
 
@@ -256,7 +256,7 @@ export function attachSalesBotListeners(clients) {
 
   console.log("═".repeat(65));
   console.log("  🤖 Seranex Lanka Solutions Autonomous AI Sales Closer Active");
-  console.log("  Hotline: 07228382638 | Web: https://seranex.lk");
+  console.log("  Hotline: 0728382638 | Web: https://seranex.lk");
   console.log("  Listening for messages, missed calls & closing deals...");
   console.log("═".repeat(65));
 
@@ -373,7 +373,7 @@ export function attachSalesBotListeners(clients) {
             try {
               const adminPhone = process.env.ADMIN_WHATSAPP_NUMBER || AGENCY_PROFILE.adminWhatsApp;
               const cleanAdmin = adminPhone.replace(/[^0-9]/g, "");
-              const alertMsg = `🚨 *SERANEX LANKA SOLUTIONS - HOT CLIENT READY TO CLOSE!*\n\nBusiness: *${conversations[rawPhone].businessName}*\nPhone: +${phoneClean}\nClient Message: "${incomingText}"\n\n🎯 *Call them right away at 07228382638 to lock in the deal!*`;
+              const alertMsg = `🚨 *SERANEX LANKA SOLUTIONS - HOT CLIENT READY TO CLOSE!*\n\nBusiness: *${conversations[rawPhone].businessName}*\nPhone: +${phoneClean}\nClient Message: "${incomingText}"\n\n🎯 *Call them right away at 0728382638 to lock in the deal!*`;
               await client.sendMessage(`${cleanAdmin}@c.us`, alertMsg);
               console.log(`  📱 Sent instant WhatsApp Hot Lead alert to Admin (${adminPhone})`);
             } catch (alertErr) {

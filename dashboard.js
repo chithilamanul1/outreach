@@ -552,7 +552,7 @@ app.post('/api/outreach/batch-whatsapp', async (req, res) => {
       const target = currentLeads.find(l => l.place_id === lead.place_id);
       if (!target || target.status === 'WHATSAPP_SENT') continue;
 
-      const pitch = target.whatsapp_pitch || `Hi from Seranex Lanka Solutions! We build high-converting websites, custom software, and video ads. Hotline: 07228382638.`;
+      const pitch = target.whatsapp_pitch || `Hi from Seranex Lanka Solutions! We build high-converting websites, custom software, and video ads. Hotline: 0728382638.`;
       const result = await sendWhatsAppOutreach(target.phone, pitch, target.name);
 
       if (result.success) {
@@ -677,7 +677,7 @@ app.get('/api/settings', (req, res) => {
     smtpHost: process.env.SMTP_HOST || 'smtp.resend.com',
     smtpPort: process.env.SMTP_PORT || '465',
     smtpUser: process.env.SMTP_USER || '',
-    emailFrom: process.env.EMAIL_FROM || 'info@seranex.lk',
+    emailFrom: process.env.EMAIL_FROM || 'sales@seranex.lk',
     smtpConfigured: Boolean(process.env.RESEND_API_KEY || (process.env.SMTP_USER && process.env.SMTP_PASS)),
     agencyName: AGENCY_PROFILE.name,
     agencyWebsite: AGENCY_PROFILE.website,
@@ -725,10 +725,10 @@ app.post('/api/settings', (req, res) => {
       `OPENROUTER_API_KEY=${process.env.OPENROUTER_API_KEY || ''}`,
       `OPENROUTER_MODEL=${process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash'}`,
       `RESEND_API_KEY=${process.env.RESEND_API_KEY || ''}`,
-      `EMAIL_FROM=${process.env.EMAIL_FROM || 'info@seranex.lk'}`,
+      `EMAIL_FROM=${process.env.EMAIL_FROM || 'sales@seranex.lk'}`,
       `DISCORD_HOT_LEADS_WEBHOOK=${process.env.DISCORD_HOT_LEADS_WEBHOOK || ''}`,
       `DISCORD_WEBHOOK_URL=${process.env.DISCORD_WEBHOOK_URL || ''}`,
-      `ADMIN_WHATSAPP_NUMBER=${process.env.ADMIN_WHATSAPP_NUMBER || '947228382638'}`,
+      `ADMIN_WHATSAPP_NUMBER=${process.env.ADMIN_WHATSAPP_NUMBER || '94728382638'}`,
       `BOT_WHATSAPP_NUMBER=${process.env.BOT_WHATSAPP_NUMBER || '94760602638'}`,
       `SMTP_HOST=${process.env.SMTP_HOST || 'smtp.resend.com'}`,
       `SMTP_PORT=${process.env.SMTP_PORT || '465'}`,
@@ -736,7 +736,7 @@ app.post('/api/settings', (req, res) => {
       `SMTP_USER=${process.env.SMTP_USER || ''}`,
       `SMTP_PASS=${process.env.SMTP_PASS || ''}`,
       `AGENCY_NAME=Seranex Lanka Solutions`,
-      `AGENCY_PHONE=07228382638`,
+      `AGENCY_PHONE=0728382638`,
       `AGENCY_WEBSITE=https://seranex.lk`
     ].join('\n');
 
@@ -837,7 +837,7 @@ app.post('/api/whatsapp/reset', async (req, res) => {
 
 app.post('/api/whatsapp/pairing-code', async (req, res) => {
   try {
-    const phone = req.body?.phone || process.env.BOT_WHATSAPP_NUMBER || '07228382638';
+    const phone = req.body?.phone || process.env.BOT_WHATSAPP_NUMBER || '0728382638';
     const pairingCode = await requestWhatsAppPairingCode(phone);
     res.json({ success: true, phone, pairingCode });
   } catch (err) {
@@ -861,7 +861,7 @@ app.listen(PORT, () => {
   console.log(`🚀 SERANEX LANKA SOLUTIONS - 24/7 AI OUTREACH & SALES COMMAND CENTER`);
   console.log(`🌐 Live Dashboard: http://localhost:${PORT}`);
   console.log(`💼 Unified Growth: Software • Websites • Video Ad Marketing`);
-  console.log(`📞 Hotline: 07228382638 | Web: https://seranex.lk`);
+  console.log(`📞 Hotline: 0728382638 | Web: https://seranex.lk`);
   console.log(`🐳 Dokploy & Docker Ready: Container Healthcheck Active`);
   console.log(`════════════════════════════════════════════════════════════════\n`);
 

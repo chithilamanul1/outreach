@@ -86,7 +86,7 @@
             <span class="text-slate-300 font-medium">Video Ads & Marketing</span>
             <span class="text-slate-500">|</span>
             <a href="https://seranex.lk" target="_blank" class="text-brand-400 hover:underline font-mono text-xs"><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> seranex.lk</a>
-            <span class="text-emerald-400 font-mono text-xs font-bold"><i class="fa-solid fa-phone text-[10px]"></i> 07228382638</span>
+            <span class="text-emerald-400 font-mono text-xs font-bold"><i class="fa-solid fa-phone text-[10px]"></i> 0728382638</span>
           </p>
         </div>
       </div>
@@ -451,14 +451,14 @@
           </div>
 
           <div class="bg-surface-850 p-3 rounded-xl border border-surface-700 mb-3 space-y-1.5">
-            <label class="block font-semibold text-slate-300">Resend API Key (Fastest for info@seranex.lk)</label>
+            <label class="block font-semibold text-slate-300">Resend API Key (Fastest for sales@seranex.lk)</label>
             <input type="password" id="cfg-resend-key" placeholder="re_xxxxxxxxxxxxxxxxxxxx" class="w-full bg-surface-900 border border-surface-700 rounded-xl p-2 text-xs text-slate-200">
             <p class="text-[10px] text-slate-400">Get your API key at <a href="https://resend.com/api-keys" target="_blank" class="text-brand-400 hover:underline">resend.com/api-keys</a></p>
           </div>
 
           <div class="mb-3">
             <label class="block font-semibold text-slate-300 mb-1">Sender Email Address (From)</label>
-            <input type="email" id="cfg-email-from" placeholder="info@seranex.lk" class="w-full bg-surface-900 border border-surface-700 rounded-xl p-2 text-xs text-slate-200">
+            <input type="email" id="cfg-email-from" placeholder="sales@seranex.lk" class="w-full bg-surface-900 border border-surface-700 rounded-xl p-2 text-xs text-slate-200">
           </div>
 
           <div class="text-[11px] font-semibold text-slate-400 mb-1">Or Standard SMTP (Resend / Hostinger / cPanel)</div>
@@ -491,11 +491,11 @@
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block text-slate-400 mb-1">Company Hotline</label>
-              <input type="text" value="07228382638" readonly class="w-full bg-surface-800 border border-surface-700 rounded-xl p-2 text-xs text-emerald-400 font-bold">
+              <input type="text" value="0728382638" readonly class="w-full bg-surface-800 border border-surface-700 rounded-xl p-2 text-xs text-emerald-400 font-bold">
             </div>
             <div>
               <label class="block text-slate-400 mb-1">Admin WhatsApp (Hot Lead Alerts)</label>
-              <input type="text" id="cfg-admin-wa" placeholder="947228382638" class="w-full bg-surface-900 border border-surface-700 rounded-xl p-2 text-xs text-slate-200">
+              <input type="text" id="cfg-admin-wa" placeholder="94728382638" class="w-full bg-surface-900 border border-surface-700 rounded-xl p-2 text-xs text-slate-200">
             </div>
           </div>
         </div>
@@ -627,7 +627,7 @@
       <div class="border-t border-surface-700/60 pt-3 space-y-2">
         <div class="text-[11px] text-slate-400">Or link with phone number:</div>
         <div class="flex items-center gap-2 justify-center">
-          <input type="text" id="wa-pair-phone" placeholder="07228382638" value="07228382638" class="bg-surface-900 border border-surface-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 w-36 text-center">
+          <input type="text" id="wa-pair-phone" placeholder="0728382638" value="0728382638" class="bg-surface-900 border border-surface-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 w-36 text-center">
           <button onclick="fetchPairingCode()" id="btn-pairing-code" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600/30 transition">
             <i class="fa-solid fa-key mr-1"></i> Get Code
           </button>
@@ -1241,12 +1241,12 @@
         document.getElementById('cfg-places-key').value = cfg.googlePlacesKeyConfigured ? '••••••••' : '';
         document.getElementById('cfg-openrouter-key').value = cfg.openRouterKeyConfigured ? '••••••••' : '';
         document.getElementById('cfg-resend-key').value = cfg.resendKeyConfigured ? '••••••••' : '';
-        document.getElementById('cfg-email-from').value = cfg.emailFrom || 'info@seranex.lk';
+        document.getElementById('cfg-email-from').value = cfg.emailFrom || 'sales@seranex.lk';
         document.getElementById('cfg-discord-webhook').value = cfg.discordWebhook || '';
         document.getElementById('cfg-smtp-host').value = cfg.smtpHost || '';
         document.getElementById('cfg-smtp-port').value = cfg.smtpPort || '465';
         document.getElementById('cfg-smtp-user').value = cfg.smtpUser || '';
-        document.getElementById('cfg-admin-wa').value = cfg.adminWhatsApp || '947228382638';
+        document.getElementById('cfg-admin-wa').value = cfg.adminWhatsApp || '94728382638';
         openModal('settings-modal');
       });
     }

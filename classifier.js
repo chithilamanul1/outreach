@@ -114,7 +114,7 @@ export async function generateAIPitch(auditData, apiKey, model = "google/gemini-
     return generateFallbackPitch(auditData);
   }
 
-  const prompt = `You are the Senior Sales Consultant at "Seranex Lanka Solutions" (https://seranex.lk), hotline: 07228382638.
+  const prompt = `You are the Senior Sales Consultant at "Seranex Lanka Solutions" (https://seranex.lk), hotline: 0728382638.
 We provide 3 key services:
 1. Software Development (Custom Web/Mobile Apps, CRM, ERP, Booking & Ordering Engines, Automation)
 2. Website Design & Development (Ultra-fast, Modern, E-commerce, Mobile-first, 1-2 Day Delivery, $100 / Rs. 28,000 with free domain & hosting)
@@ -132,7 +132,7 @@ Target Prospect:
 Task:
 Draft TWO personalized cold outreach pitches specifically tailored to "${auditData.name}":
 1. A professional B2B Cold Email (Compelling subject line + warm, consultative body mentioning their business gap and how Seranex Lanka Solutions solves it).
-2. A high-converting WhatsApp message (Short, punchy, 3-4 sentences max, friendly tone, mentioning our hotline 07228382638, conversational CTA to see live demo).
+2. A high-converting WhatsApp message (Short, punchy, 3-4 sentences max, friendly tone, mentioning our hotline 0728382638, conversational CTA to see live demo).
 
 Format your response as strict JSON:
 {
@@ -214,7 +214,7 @@ Seranex Lanka Solutions
 Web: ${AGENCY_PROFILE.website}
 Hotline / WhatsApp: ${AGENCY_PROFILE.hotline}`;
 
-    waPitch = `Hi from Seranex Lanka Solutions! We noticed ${audit.name} has great ratings (${audit.rating}★), but no official website yet. We build modern, fast business websites in just 1-2 days (starting at $100 / Rs. 28,000 with free domain & hosting) plus custom booking software and cinematic video ads. Would you like to see a free design demo for ${audit.name}? Hotline: 07228382638.`;
+    waPitch = `Hi from Seranex Lanka Solutions! We noticed ${audit.name} has great ratings (${audit.rating}★), but no official website yet. We build modern, fast business websites in just 1-2 days (starting at $100 / Rs. 28,000 with free domain & hosting) plus custom booking software and cinematic video ads. Would you like to see a free design demo for ${audit.name}? Hotline: 0728382638.`;
   } else {
     subject = `New customer acquisition & software upgrade for ${audit.name}`;
     emailBody = `Hi ${audit.name} Team,
@@ -235,7 +235,7 @@ Seranex Lanka Solutions
 Web: ${AGENCY_PROFILE.website}
 Direct Hotline: ${AGENCY_PROFILE.hotline}`;
 
-    waPitch = `Hello ${audit.name} team! I'm reaching out from Seranex Lanka Solutions. We build custom booking software, website upgrades, and 4K Instagram/TikTok video ad campaigns that bring high-ticket customers directly to your business. Could I share a quick 1-minute portfolio video of our latest client results? Hotline: 07228382638.`;
+    waPitch = `Hello ${audit.name} team! I'm reaching out from Seranex Lanka Solutions. We build custom booking software, website upgrades, and 4K Instagram/TikTok video ad campaigns that bring high-ticket customers directly to your business. Could I share a quick 1-minute portfolio video of our latest client results? Hotline: 0728382638.`;
   }
 
   return {

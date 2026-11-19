@@ -112,7 +112,7 @@ export async function discoverLeadsForCategory(verticalKey = "restaurants", targ
 
   console.log(`\n═════════════════════════════════════════════════════════════════`);
   console.log(`🚀 SERANEX LANKA SOLUTIONS - AUTONOMOUS LEAD HUNTER`);
-  console.log(`Hotline: 07228382638 | Web: https://seranex.lk`);
+  console.log(`Hotline: 0728382638 | Web: https://seranex.lk`);
   console.log(`Target Industry: ${vertical.name}`);
   console.log(`Regions: ${regionsToScan.join(", ")}`);
   console.log(`═════════════════════════════════════════════════════════════════\n`);

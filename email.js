@@ -12,7 +12,7 @@ export function getEmailProvider() {
   const smtpHost = process.env.SMTP_HOST || "smtp.hostinger.com";
   const smtpPort = parseInt(process.env.SMTP_PORT || "465", 10);
   const smtpSecure = process.env.SMTP_SECURE === "false" ? false : (smtpPort === 465);
-  const fromEmail = process.env.EMAIL_FROM || process.env.SMTP_FROM || (smtpUser === "resend" ? "info@seranex.lk" : (smtpUser || "info@seranex.lk"));
+  const fromEmail = process.env.EMAIL_FROM || process.env.SMTP_FROM || (smtpUser === "resend" ? "sales@seranex.lk" : (smtpUser || "sales@seranex.lk"));
 
   // 1. Resend REST API (Highest reliability, fast, no open SMTP ports required)
   if (resendKey) {
@@ -73,8 +73,8 @@ export function generateSeranexHtmlEmail(lead, pitch) {
   const agencyName = AGENCY_PROFILE.name;
   const website = AGENCY_PROFILE.website;
   const phone = AGENCY_PROFILE.hotline;
-  const cleanPhone = phone.replace(/[^0-9]/g, "");
-  const waUrl = `https://wa.me/947228382638?text=Hi%20Seranex%20Lanka,%20I%20received%20your%20email%20regarding%20${encodeURIComponent(lead.name)}`;
+  const cleanPhone = phone.replace(/^0/, "94");
+  const waUrl = `https://wa.me/94728382638?text=Hi%20Seranex%20Lanka,%20I%20received%20your%20email%20regarding%20${encodeURIComponent(lead.name)}`;
 
   const bodyParagraphs = (pitch.email_body || "")
     .split("\n\n")
@@ -140,7 +140,7 @@ export function generateSeranexHtmlEmail(lead, pitch) {
                 <tr>
                   <td style="border-radius: 8px; background-color: #2563eb;">
                     <a href="${waUrl}" target="_blank" style="display: inline-block; padding: 13px 24px; font-size: 14px; color: #ffffff; text-decoration: none; font-weight: 600; border-radius: 8px;">
-                      💬 Chat on WhatsApp (07228382638)
+                      💬 Chat on WhatsApp (0728382638)
                     </a>
                   </td>
                   <td style="padding-left: 12px;">

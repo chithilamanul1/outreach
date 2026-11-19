@@ -54,7 +54,7 @@ export function getWhatsAppStatus() {
 }
 
 /**
- * Clean phone number to international format (e.g. 07228382638 -> 947228382638)
+ * Clean phone number to international format (e.g. 0728382638 -> 94728382638)
  */
 export function cleanPhoneNumber(phone) {
   if (!phone) return null;
@@ -66,7 +66,7 @@ export function cleanPhoneNumber(phone) {
 }
 
 /**
- * Format phone number into WhatsApp chat ID (e.g. 947228382638@c.us)
+ * Format phone number into WhatsApp chat ID (e.g. 94728382638@c.us)
  */
 export function formatPhoneForWhatsApp(phone) {
   const cleaned = cleanPhoneNumber(phone);
@@ -80,7 +80,7 @@ export async function requestWhatsAppPairingCode(phone) {
   if (!waClient) {
     await initWhatsApp();
   }
-  const target = phone || process.env.BOT_WHATSAPP_NUMBER || "07228382638";
+  const target = phone || process.env.BOT_WHATSAPP_NUMBER || "0728382638";
   const cleanPhone = cleanPhoneNumber(target);
   if (!cleanPhone) throw new Error("No valid phone number provided for pairing");
 
@@ -298,7 +298,7 @@ export async function sendWhatsAppOutreach(phone, message, businessName = "Busin
  * Send high-converting "Missed Call Hook" message on WhatsApp
  */
 export async function sendMissedCallOutreach(phone, businessName = "Business") {
-  const missedCallHook = `📞 *Missed Call from Seranex Lanka Solutions (Hotline: 07228382638)*
+  const missedCallHook = `📞 *Missed Call from Seranex Lanka Solutions (Hotline: 0728382638)*
 
 Hi ${businessName} Team! I just gave your phone a quick ring regarding your business growth & digital systems. 
 
@@ -309,7 +309,7 @@ We help businesses like yours launch:
 2️⃣ High-Converting Websites (ready in 1-2 days, $100 / Rs. 28,000 with free domain & hosting)
 3️⃣ Cinematic 4K Video Ads & Reels for Instagram/TikTok that bring paying customers
 
-Are you open to a quick 2-minute chat today, or can I send over our live client portfolio? Hotline: 07228382638 🚀`;
+Are you open to a quick 2-minute chat today, or can I send over our live client portfolio? Hotline: 0728382638 🚀`;
 
   return sendWhatsAppOutreach(phone, missedCallHook, businessName);
 }

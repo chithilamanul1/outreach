@@ -31,11 +31,13 @@ PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 # Agency Identity
 AGENCY_NAME="Seranex Lanka Solutions"
-AGENCY_PHONE="07228382638"
+AGENCY_PHONE="0728382638"
 AGENCY_WEBSITE="https://seranex.lk"
-ADMIN_WHATSAPP_NUMBER="947228382638"
+ADMIN_WHATSAPP_NUMBER="94728382638"
 BOT_WHATSAPP_NUMBER="94760602638"
 WHATSAPP_AUTO_SEND="true"
+RESEND_API_KEY="your_resend_api_key_here"
+EMAIL_FROM="sales@seranex.lk"
 
 # APIs & Models
 GOOGLE_PLACES_API_KEY=your_google_places_api_key_here
@@ -96,5 +98,5 @@ If you prefer deploying as a single Dokploy Application rather than Compose:
 
 ## 📞 Missed Call & Real Sales Agent Feature
 
-* **Missed Call Interceptor:** If any client places a WhatsApp call or missed call to the bot, the AI agent catches it within 2 seconds, sends a warm sales consultation message highlighting your 3 services, gives them your hotline `07228382638` and `https://seranex.lk`, and alerts you on Discord + WhatsApp immediately!
+* **Missed Call Interceptor:** If any client places a WhatsApp call or missed call to the bot, the AI agent catches it within 2 seconds, sends a warm sales consultation message highlighting your 3 services, gives them your hotline `0728382638` and `https://seranex.lk`, and alerts you on Discord + WhatsApp immediately!
 * **Trigger Missed Call Hook:** In the dashboard CRM table, click the **📞 icon** on any lead to send a personalized missed-call hook message and trigger a 1-tap phone dialer on your device.

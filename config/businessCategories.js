@@ -13,10 +13,10 @@ export const AGENCY_PROFILE = {
   website: "https://seranex.lk",
   portfolioUrl: "https://seranex.lk",
   bookingUrl: "https://seranex.lk",
-  contactEmail: process.env.SMTP_USER || process.env.EMAIL_USER || "hello@seranex.lk",
-  hotline: "07228382638",
-  hotlineIntl: "+94 72 283 8268",
-  adminWhatsApp: process.env.ADMIN_WHATSAPP_NUMBER || "947228382638",
+  contactEmail: process.env.EMAIL_FROM || process.env.SMTP_USER || "sales@seranex.lk",
+  hotline: "0728382638",
+  hotlineIntl: "+94 72 838 2638",
+  adminWhatsApp: process.env.ADMIN_WHATSAPP_NUMBER || "94728382638",
   pricing: {
     websiteStarterUSD: 100,
     websiteStarterLKR: 28000,
@@ -35,7 +35,7 @@ export const CORE_SERVICES = {
     deliverables: [
       "Custom responsive design (Mobile, Tablet, Desktop)",
       "Domain name & high-speed SSD cloud hosting for 1 year included",
-      "Direct WhatsApp & click-to-call conversion buttons (07228382638)",
+      "Direct WhatsApp & click-to-call conversion buttons (0728382638)",
       "Google Maps & Local SEO indexing",
       "Lead generation contact form & analytics",
       "Social media and menu/catalog integration"

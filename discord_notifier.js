@@ -66,7 +66,7 @@ export async function notifyOutreachDispatched(lead, channel = "Email") {
       { name: "Channel", value: channel, inline: true },
       { name: "Target", value: channel === "Email" ? `\`${lead.email}\`` : `\`${lead.phone}\``, inline: true },
       { name: "Service Pitched", value: lead.service_details?.name || lead.recommended_service || "Digital Growth", inline: true },
-      { name: "Hotline", value: "07228382638", inline: true },
+      { name: "Hotline", value: "0728382638", inline: true },
       { name: "Status", value: "⏳ Awaiting Client Reply", inline: true },
     ],
     footer: { text: "Seranex Lanka Solutions • Sales Pipeline" },
@@ -96,7 +96,7 @@ export async function notifyHotLead(phone, businessName, classification, convers
       { name: "Phone / Contact", value: phone ? `+${phone}` : "N/A", inline: true },
       { name: "Classification", value: `**${classification}**`, inline: true },
       { name: "Recent Interaction", value: recentMsgs, inline: false },
-      { name: "Next Step", value: classification === "HOT" ? "🚨 **ACTION: Call client immediately from hotline 07228382638 to close deal!**" : "AI Agent is actively nurturing lead.", inline: false }
+      { name: "Next Step", value: classification === "HOT" ? "🚨 **ACTION: Call client immediately from hotline 0728382638 to close deal!**" : "AI Agent is actively nurturing lead.", inline: false }
     ],
     footer: { text: "Seranex Lanka Solutions • Autonomous Sales Closer" },
     timestamp: new Date().toISOString(),
