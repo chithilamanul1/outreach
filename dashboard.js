@@ -18,7 +18,8 @@ import {
   requestWhatsAppPairingCode,
   resetWhatsAppSession,
   sendWhatsAppOutreach,
-  sendMissedCallOutreach
+  sendMissedCallOutreach,
+  notifyAdminWhatsApp
 } from './whatsapp.js';
 import {
   loadConversations,
@@ -73,6 +74,45 @@ function saveAutomationConfig(cfg) {
   writeFileSync(AUTOMATION_FILE, JSON.stringify(cfg, null, 2), 'utf-8');
 }
 
+export async function runAutonomousCycle(triggerSource = "Autopilot") {
+  const currentConfig = loadAutomationConfig();
+  if (!currentConfig.enabled) return { success: false, message: "Automation is disabled" };
+
+  console.log(`\n⏰ [24/7 AUTONOMOUS CYCLE TRIGGERED via ${triggerSource}] Starting lead discovery & outreach...`);
+
+  // Send WhatsApp startup notification to user/founder
+  await notifyAdminWhatsApp(
+    `🚀 *Seranex Lanka Solutions — 24/7 Engine Started!*\n\n` +
+    `✅ Autonomous Lead Hunter is actively working.\n` +
+    `🔍 Hunting new leads in: ${(currentConfig.regions || ['Colombo']).join(', ')}\n` +
+    `💼 Targeting verticals: ${(currentConfig.verticals || ['restaurants']).join(', ')}\n` +
+    `📨 Resend Email (${process.env.EMAIL_FROM || 'sales@seranex.lk'}) & WhatsApp Outreach: ACTIVE\n` +
+    `🤖 Kasun (AI Sales Closer) listening on hotline: 0728382638\n\n` +
+    `🌐 Command Center: http://localhost:3000`
+  );
+
+  for (const vertical of currentConfig.verticals || ['restaurants']) {
+    for (const region of currentConfig.regions || ['Colombo']) {
+      try {
+        console.log(`   🚀 Auto-Hunting: ${vertical} in ${region}...`);
+        await discoverLeadsForCategory(vertical, region, {
+          sendEmails: currentConfig.autoSendEmail,
+          sendWhatsApp: currentConfig.autoSendWhatsApp
+        });
+      } catch (cycleErr) {
+        console.warn(`   ⚠ Auto-hunting cycle error for ${vertical}/${region}: ${cycleErr.message}`);
+      }
+      await sleep(10000);
+    }
+  }
+
+  currentConfig.lastRun = new Date().toISOString();
+  currentConfig.totalRuns = (currentConfig.totalRuns || 0) + 1;
+  saveAutomationConfig(currentConfig);
+  console.log(`✅ [24/7 AUTONOMOUS CYCLE COMPLETE via ${triggerSource}]\n`);
+  return { success: true, lastRun: currentConfig.lastRun, totalRuns: currentConfig.totalRuns };
+}
+
 function setup24x7Scheduler(cfg) {
   if (activeCronTask) {
     activeCronTask.stop();
@@ -90,29 +130,7 @@ function setup24x7Scheduler(cfg) {
   console.log(`⏰ Setting up 24/7 Autonomous Lead Hunter (Runs every ${hours} hours: "${cronExpr}")...`);
 
   activeCronTask = cron.schedule(cronExpr, async () => {
-    console.log(`\n⏰ [24/7 AUTONOMOUS CYCLE TRIGGERED] Starting background lead discovery...`);
-    const currentConfig = loadAutomationConfig();
-    if (!currentConfig.enabled) return;
-
-    for (const vertical of currentConfig.verticals || ['restaurants']) {
-      for (const region of currentConfig.regions || ['Colombo']) {
-        try {
-          console.log(`   🚀 Auto-Hunting: ${vertical} in ${region}...`);
-          await discoverLeadsForCategory(vertical, region, {
-            sendEmails: currentConfig.autoSendEmail,
-            sendWhatsApp: currentConfig.autoSendWhatsApp
-          });
-        } catch (cycleErr) {
-          console.warn(`   ⚠ Auto-hunting cycle error for ${vertical}/${region}: ${cycleErr.message}`);
-        }
-        await sleep(10000);
-      }
-    }
-
-    currentConfig.lastRun = new Date().toISOString();
-    currentConfig.totalRuns = (currentConfig.totalRuns || 0) + 1;
-    saveAutomationConfig(currentConfig);
-    console.log(`✅ [24/7 AUTONOMOUS CYCLE COMPLETE] Next cycle in ${hours} hours.\n`);
+    await runAutonomousCycle("Cron Scheduler");
   });
 }
 
@@ -663,6 +681,15 @@ app.post('/api/automation', (req, res) => {
   }
 });
 
+app.post('/api/automation/run-now', async (req, res) => {
+  try {
+    res.json({ success: true, message: "Autonomous lead hunter cycle triggered." });
+    runAutonomousCycle("Manual Dashboard Trigger").catch(e => console.error("Run-now error:", e.message));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── API: SETTINGS & CONFIGURATION MANAGEMENT ─────────────────────────────────
 
 app.get('/api/settings', (req, res) => {
@@ -869,6 +896,12 @@ app.listen(PORT, () => {
   const autoCfg = loadAutomationConfig();
   if (autoCfg.enabled) {
     setup24x7Scheduler(autoCfg);
+
+    // Trigger initial autonomous discovery cycle on startup
+    setTimeout(() => {
+      console.log(`\n🚀 [STARTUP AUTORUN] Triggering initial lead hunter & outreach cycle...`);
+      runAutonomousCycle("Startup Boot").catch(e => console.warn(`⚠ Startup cycle warning: ${e.message}`));
+    }, 8000);
   }
 
   // Pre-initialize WhatsApp if phone configured

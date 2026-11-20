@@ -315,20 +315,29 @@ Are you open to a quick 2-minute chat today, or can I send over our live client 
 }
 
 /**
- * Send urgent notification to Admin WhatsApp (e.g. Hot Lead Alert)
+ * Send urgent notification to Admin WhatsApp (e.g. Hot Lead Alert or Startup Confirmation)
  */
 export async function notifyAdminWhatsApp(text) {
-  const adminPhone = process.env.ADMIN_WHATSAPP_NUMBER || AGENCY_PROFILE.adminWhatsApp;
-  if (!adminPhone) return false;
+  if (!isReady || !waClient) return false;
 
-  const chatId = formatPhoneForWhatsApp(adminPhone);
-  if (!chatId || !isReady || !waClient) return false;
+  const targets = new Set();
+  if (process.env.ADMIN_WHATSAPP_NUMBER) targets.add(cleanPhoneNumber(process.env.ADMIN_WHATSAPP_NUMBER));
+  if (AGENCY_PROFILE.adminWhatsApp) targets.add(cleanPhoneNumber(AGENCY_PROFILE.adminWhatsApp));
+  if (AGENCY_PROFILE.hotline) targets.add(cleanPhoneNumber(AGENCY_PROFILE.hotline));
+  targets.add("94711770186");
+  targets.add("94728382638");
 
-  try {
-    await waClient.sendMessage(chatId, text);
-    return true;
-  } catch (err) {
-    console.warn(`  ⚠ Failed to send WhatsApp alert to admin: ${err.message}`);
-    return false;
+  let sent = false;
+  for (const phone of targets) {
+    if (!phone) continue;
+    const chatId = `${phone}@c.us`;
+    try {
+      await waClient.sendMessage(chatId, text);
+      console.log(`  📱 Sent WhatsApp admin notification to ${phone}`);
+      sent = true;
+    } catch (err) {
+      console.warn(`  ⚠ Failed to send WhatsApp notification to ${phone}: ${err.message}`);
+    }
   }
+  return sent;
 }
