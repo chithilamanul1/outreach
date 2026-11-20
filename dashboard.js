@@ -904,10 +904,7 @@ app.listen(PORT, () => {
     }, 8000);
   }
 
-  // Pre-initialize WhatsApp if phone configured
-  const botPhone = process.env.BOT_WHATSAPP_NUMBER;
-  if (botPhone) {
-    console.log(`📱 Pre-connecting WhatsApp for Seranex Lanka Solutions Outreach...`);
-    initWhatsApp().catch(err => console.warn(`⚠ WhatsApp pre-init warning: ${err.message}`));
-  }
+  // Pre-initialize WhatsApp client for live QR & instant admin messaging
+  console.log(`📱 Pre-connecting WhatsApp for Seranex Lanka Solutions Outreach...`);
+  initWhatsApp().catch(err => console.warn(`⚠ WhatsApp pre-init warning: ${err.message}`));
 });

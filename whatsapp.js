@@ -10,6 +10,7 @@ const { Client, LocalAuth, MessageMedia } = pkg;
 import qrcode from "qrcode-terminal";
 import QRCode from "qrcode";
 import { existsSync, writeFileSync, readFileSync, unlinkSync } from "node:fs";
+import { execSync } from "node:child_process";
 import { AGENCY_PROFILE } from "./config/businessCategories.js";
 import { attachSalesBotListeners } from "./salesbot.js";
 
@@ -98,6 +99,24 @@ export async function requestWhatsAppPairingCode(phone) {
 }
 
 /**
+ * Clean up orphaned Puppeteer Chrome processes and lockfiles on Windows
+ */
+function cleanupOrphanedChrome() {
+  if (process.platform === "win32") {
+    try {
+      execSync('powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \\"Name = \'chrome.exe\'\\" | Where-Object { $_.CommandLine -like \'*session-seranex-sales*\' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"', { stdio: "ignore" });
+    } catch (_) {}
+  }
+  const sessionDir = "./.wwebjs_auth/session-seranex-sales";
+  ["SingletonLock", "SingletonCookie", "SingletonSocket", "lockfile"].forEach((f) => {
+    try {
+      const p = `${sessionDir}/${f}`;
+      if (existsSync(p)) unlinkSync(p);
+    } catch (_) {}
+  });
+}
+
+/**
  * Reset WhatsApp session cleanly and generate a fresh live QR code
  */
 export async function resetWhatsAppSession() {
@@ -114,13 +133,7 @@ export async function resetWhatsAppSession() {
     waClient = null;
   }
 
-  // Remove old lockfile if present
-  try {
-    const lockPath = "./.wwebjs_auth/session-seranex-sales/lockfile";
-    if (existsSync(lockPath)) {
-      unlinkSync(lockPath);
-    }
-  } catch (_) {}
+  cleanupOrphanedChrome();
 
   await new Promise(r => setTimeout(r, 1500));
   return await initWhatsApp();
@@ -132,6 +145,8 @@ export async function resetWhatsAppSession() {
 export async function initWhatsApp() {
   if (isReady && waClient) return waClient;
   if (initPromise) return initPromise;
+
+  cleanupOrphanedChrome();
 
   initPromise = new Promise((resolve) => {
     console.log("\n📱 Initializing WhatsApp Client for Seranex Lanka Solutions...");
@@ -160,7 +175,8 @@ export async function initWhatsApp() {
       authStrategy: new LocalAuth({ clientId: "seranex-sales", dataPath: "./.wwebjs_auth" }),
       puppeteer: puppeteerOptions,
       webVersionCache: {
-        type: "none",
+        type: "remote",
+        remotePath: "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1055414421-alpha.html",
       },
     });
 
@@ -214,6 +230,20 @@ export async function initWhatsApp() {
 
       // Attach sales closer and missed call listeners
       attachSalesBotListeners([waClient]);
+
+      // Instant WhatsApp notification to Seranex Admin
+      try {
+        await notifyAdminWhatsApp(
+          `🚀 *Seranex Lanka Solutions — 24/7 Engine Started!*\n\n` +
+          `Autonomous B2B Client Acquisition Engine is officially active and online.\n` +
+          `• *Hotline:* 0728382638\n` +
+          `• *Sales Email:* sales@seranex.lk\n` +
+          `• *Website:* https://seranex.lk\n` +
+          `• *Status:* Actively finding leads, dispatching cold pitches, and closing deals 24/7.`
+        );
+      } catch (notifyErr) {
+        console.warn("  ⚠ Admin startup WhatsApp notification error:", notifyErr.message);
+      }
 
       resolve(waClient);
     });
